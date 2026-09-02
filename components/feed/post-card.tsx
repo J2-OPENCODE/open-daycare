@@ -1,6 +1,6 @@
-import { Avatar } from "@/components/feed/avatar";
 import { CategoryBadge } from "@/components/feed/category-badge";
 import { HeartIcon, ImageIcon, MessageIcon } from "@/components/icons";
+import { Avatar } from "@/components/ui/avatar";
 import type { FeedPost } from "@/types/feed";
 
 type PostCardProps = {

@@ -1,3 +1,5 @@
+import type { IconAvatar, InitialsAvatar } from "@/types/avatar";
+
 type FeedPostBase = {
   id: string;
   title: string;
@@ -8,20 +10,6 @@ type FeedPostBase = {
   reactions: number;
   comments: number;
   editable: boolean;
-};
-
-export type InitialsAvatar = {
-  kind: "initials";
-  initials: string;
-  background: string;
-  foreground: string;
-};
-
-export type IconAvatar = {
-  kind: "icon";
-  icon: "megaphone";
-  background: string;
-  foreground: string;
 };
 
 export type PhotoPlaceholder = {
