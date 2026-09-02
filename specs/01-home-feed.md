@@ -1,6 +1,6 @@
 # SPEC 01 — Home del feed
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** Ninguna
 > **Fecha:** 2026-09-02
 > **Objetivo:** Implementar en `/` un home estático, responsive y visualmente fiel a `referencias/pantallas/feed.dc.html` mediante componentes reutilizables y fixtures tipadas.
@@ -151,26 +151,26 @@ Cada paso debe conservar `npm run dev` funcional y no debe crear enlaces a rutas
 
 ## Criterios de aceptación
 
-- [ ] Visitar `/` muestra el home de OpenDayCare y no conserva contenido visual del starter de Next.js.
-- [ ] A 1200 x 800, una comparación manual lado a lado con `referencias/pantallas/feed.dc.html` confirma la misma estructura, medidas, espaciado, paleta, bordes, radios, sombras, tipografía, iconografía y comportamiento de scroll, salvo diferencias inevitables de antialiasing tipográfico.
-- [ ] En escritorio, el sidebar mide 248 px, permanece fijo a la izquierda y ocupa la altura del viewport.
-- [ ] En escritorio, el área principal tiene scroll independiente y su contenido usa un ancho máximo de 760 px, 40 px de padding horizontal y 34 px de padding superior.
-- [ ] La página usa `#F6ECDF` como fondo principal, `#FFFDF9` en sidebar y tarjetas, y `#ECE0D0` en los bordes definidos por la referencia.
-- [ ] Fredoka se aplica a marca, títulos y nombres; Nunito se aplica al resto del contenido.
-- [ ] La cabecera muestra `GUARDERÍA · SALA SOLES`, `Buenas, Caro`, `12 niños · martes 17 jun` y `PUBLICADO HOY` exactamente como la referencia.
-- [ ] El composer muestra el avatar `C`, el texto `Compartí un momento…` y el icono de cámara sin ejecutar acciones.
-- [ ] Se muestran exactamente tres publicaciones, en el mismo orden, con categorías LOGRO, ACTIVIDAD y ANUNCIO, sus textos, audiencias, horas y contadores originales.
-- [ ] La publicación de actividad muestra el placeholder punteado `Foto · pintando con témperas`; ninguna publicación solicita o carga una imagen real.
-- [ ] Feed se anuncia como la página actual; los demás destinos y acciones se anuncian como no disponibles, no cambian estado y no navegan a una ruta inexistente.
-- [ ] En anchos menores de 768 px desaparece el sidebar y aparecen una cabecera compacta y una barra inferior con Feed, Niños, Avisos y Mi cuenta.
-- [ ] A 390 x 844 no existe scroll horizontal, ninguna tarjeta se recorta y el final del feed puede desplazarse por encima de la barra inferior.
-- [ ] La paleta permanece fiel a la referencia independientemente de la preferencia de tema del sistema.
-- [ ] El documento usa `lang="es"`, el título global `OpenDayCare` y una descripción del feed de Sala Soles.
-- [ ] La consola del navegador no muestra errores ni advertencias producidos por esta pantalla.
-- [ ] `npm run lint -- app components data types` finaliza correctamente.
-- [ ] `npx tsc --noEmit` finaliza correctamente.
-- [ ] `npm run build` finaliza correctamente.
-- [ ] `package.json` y `package-lock.json` no incorporan nuevas dependencias para esta implementación.
+- [x] Visitar `/` muestra el home de OpenDayCare y no conserva contenido visual del starter de Next.js.
+- [x] A 1200 x 800, una comparación manual lado a lado con `referencias/pantallas/feed.dc.html` confirma la misma estructura, medidas, espaciado, paleta, bordes, radios, sombras, tipografía, iconografía y comportamiento de scroll, salvo diferencias inevitables de antialiasing tipográfico.
+- [x] En escritorio, el sidebar mide 248 px, permanece fijo a la izquierda y ocupa la altura del viewport.
+- [x] En escritorio, el área principal tiene scroll independiente y su contenido usa un ancho máximo de 760 px, 40 px de padding horizontal y 34 px de padding superior.
+- [x] La página usa `#F6ECDF` como fondo principal, `#FFFDF9` en sidebar y tarjetas, y `#ECE0D0` en los bordes definidos por la referencia.
+- [x] Fredoka se aplica a marca, títulos y nombres; Nunito se aplica al resto del contenido.
+- [x] La cabecera muestra `GUARDERÍA · SALA SOLES`, `Buenas, Caro`, `12 niños · martes 17 jun` y `PUBLICADO HOY` exactamente como la referencia.
+- [x] El composer muestra el avatar `C`, el texto `Compartí un momento…` y el icono de cámara sin ejecutar acciones.
+- [x] Se muestran exactamente tres publicaciones, en el mismo orden, con categorías LOGRO, ACTIVIDAD y ANUNCIO, sus textos, audiencias, horas y contadores originales.
+- [x] La publicación de actividad muestra el placeholder punteado `Foto · pintando con témperas`; ninguna publicación solicita o carga una imagen real.
+- [x] Feed se anuncia como la página actual; los demás destinos y acciones se anuncian como no disponibles, no cambian estado y no navegan a una ruta inexistente.
+- [x] En anchos menores de 768 px desaparece el sidebar y aparecen una cabecera compacta y una barra inferior con Feed, Niños, Avisos y Mi cuenta.
+- [x] A 390 x 844 no existe scroll horizontal, ninguna tarjeta se recorta y el final del feed puede desplazarse por encima de la barra inferior.
+- [x] La paleta permanece fiel a la referencia independientemente de la preferencia de tema del sistema.
+- [x] El documento usa `lang="es"`, el título global `OpenDayCare` y una descripción del feed de Sala Soles.
+- [x] La consola del navegador no muestra errores ni advertencias producidos por esta pantalla.
+- [x] `npm run lint -- app components data types` finaliza correctamente.
+- [x] `npx tsc --noEmit` finaliza correctamente.
+- [x] `npm run build` finaliza correctamente.
+- [x] `package.json` y `package-lock.json` no incorporan nuevas dependencias para esta implementación.
 
 ## Decisiones
 

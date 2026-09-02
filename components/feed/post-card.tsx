@@ -17,7 +17,7 @@ export function PostCard({ post }: PostCardProps) {
           <h3 className="font-display text-[16.5px] font-semibold text-foreground">
             {post.title}
           </h3>
-          <p className="mt-0.5 text-[12.5px] text-muted">
+          <p className="text-[12.5px] text-muted">
             {post.publishedAt} · publicado por {post.publishedBy}
           </p>
         </div>
@@ -45,7 +45,7 @@ export function PostCard({ post }: PostCardProps) {
       <footer className="mt-4 flex items-center gap-[18px] border-t border-card-divider pt-3.5">
         <button
           type="button"
-          className="flex items-center gap-[7px] text-sm font-bold text-coral-strong disabled:opacity-100"
+          className="flex items-center gap-[7px] text-[14px] font-bold text-coral-strong disabled:opacity-100"
           disabled
           aria-label={`${post.reactions} reacciones (no disponible)`}
         >
@@ -54,7 +54,7 @@ export function PostCard({ post }: PostCardProps) {
         </button>
         <button
           type="button"
-          className="flex items-center gap-[7px] text-sm font-bold text-muted-strong disabled:opacity-100"
+          className="flex items-center gap-[7px] text-[14px] font-bold text-muted-strong disabled:opacity-100"
           disabled
           aria-label={`${post.comments} comentarios (no disponible)`}
         >
@@ -67,7 +67,7 @@ export function PostCard({ post }: PostCardProps) {
         {post.editable ? (
           <button
             type="button"
-            className="text-sm font-extrabold text-coral-dark disabled:opacity-100"
+            className="text-[14px] font-extrabold text-coral-dark disabled:opacity-100"
             disabled
             aria-label={`Editar publicación de ${post.title} (no disponible)`}
           >

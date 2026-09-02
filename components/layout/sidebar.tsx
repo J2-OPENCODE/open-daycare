@@ -116,7 +116,7 @@ export function Sidebar({ roomName, currentUser }: SidebarProps) {
             size="sm"
           />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-extrabold text-foreground">
+            <p className="truncate text-[14px] font-extrabold text-foreground">
               {currentUser.name}
             </p>
             <p className="truncate text-xs text-muted">
