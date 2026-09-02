@@ -1,5 +1,5 @@
-import { Avatar } from "@/components/feed/avatar";
 import { CameraIcon } from "@/components/icons";
+import { Avatar } from "@/components/ui/avatar";
 
 type FeedComposerProps = {
   initials: string;

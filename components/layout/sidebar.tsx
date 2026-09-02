@@ -1,4 +1,3 @@
-import { Avatar } from "@/components/feed/avatar";
 import {
   BellIcon,
   ChildrenIcon,
@@ -8,6 +7,7 @@ import {
   SunIcon,
   UserIcon,
 } from "@/components/icons";
+import { Avatar } from "@/components/ui/avatar";
 import type { FeedData } from "@/types/feed";
 import Link from "next/link";
 
@@ -16,17 +16,20 @@ type BrandProps = {
   variant?: "sidebar" | "mobile";
 };
 
+export type AppDestination = "feed" | "kids";
+
 type SidebarProps = {
   roomName: string;
   currentUser: FeedData["currentUser"];
+  currentDestination: AppDestination;
 };
 
 const navigationItems = [
-  { label: "Feed", icon: HomeIcon, current: true },
-  { label: "Niños", icon: ChildrenIcon, current: false },
-  { label: "Avisos", icon: BellIcon, current: false },
-  { label: "Mi cuenta", icon: UserIcon, current: false },
-];
+  { destination: "feed", label: "Feed", icon: HomeIcon, href: "/" },
+  { destination: "kids", label: "Niños", icon: ChildrenIcon, href: "/kids" },
+  { destination: null, label: "Avisos", icon: BellIcon, href: null },
+  { destination: null, label: "Mi cuenta", icon: UserIcon, href: null },
+] as const;
 
 export function Brand({ roomName, variant = "sidebar" }: BrandProps) {
   const isMobile = variant === "mobile";
@@ -57,7 +60,11 @@ export function Brand({ roomName, variant = "sidebar" }: BrandProps) {
   );
 }
 
-export function Sidebar({ roomName, currentUser }: SidebarProps) {
+export function Sidebar({
+  roomName,
+  currentUser,
+  currentDestination,
+}: SidebarProps) {
   return (
     <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col border-r border-border bg-surface px-4 py-6 md:flex">
       <Brand roomName={roomName} />
@@ -73,35 +80,43 @@ export function Sidebar({ roomName, currentUser }: SidebarProps) {
       </button>
 
       <nav className="flex flex-1 flex-col gap-1" aria-label="Navegación principal">
-        {navigationItems.map(({ label, icon: NavigationIcon, current }) => {
-          const className = `flex items-center gap-3 rounded-xl px-3 py-[11px] text-[14.5px] ${
-            current
-              ? "bg-coral-soft font-extrabold text-coral-heading"
-              : "font-semibold text-[#6E6359]"
-          }`;
-          const content = (
-            <>
-              <NavigationIcon size={19} />
-              <span>{label}</span>
-            </>
-          );
+        {navigationItems.map(
+          ({ destination, label, icon: NavigationIcon, href }) => {
+            const current = destination === currentDestination;
+            const className = `flex items-center gap-3 rounded-xl px-3 py-[11px] text-[14.5px] ${
+              current
+                ? "bg-coral-soft font-extrabold text-coral-heading"
+                : "font-semibold text-[#6E6359]"
+            }`;
+            const content = (
+              <>
+                <NavigationIcon size={19} />
+                <span>{label}</span>
+              </>
+            );
 
-          return current ? (
-            <Link key={label} href="/" className={className} aria-current="page">
-              {content}
-            </Link>
-          ) : (
-            <span
-              key={label}
-              className={className}
-              role="link"
-              aria-disabled="true"
-              aria-label={`${label} (no disponible)`}
-            >
-              {content}
-            </span>
-          );
-        })}
+            return href ? (
+              <Link
+                key={label}
+                href={href}
+                className={className}
+                aria-current={current ? "page" : undefined}
+              >
+                {content}
+              </Link>
+            ) : (
+              <span
+                key={label}
+                className={className}
+                role="link"
+                aria-disabled="true"
+                aria-label={`${label} (no disponible)`}
+              >
+                {content}
+              </span>
+            );
+          },
+        )}
       </nav>
 
       <div className="mt-2.5 border-t border-border pt-3.5">

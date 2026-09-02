@@ -30,6 +30,29 @@
   --photo-background: #f4ece1;
   --photo-border: #dbcdba;
   --photo-foreground: #b0a290;
+  --chevron: #cbb89f;
+  --medical-badge-soft: #fbd8cc;
+  --medical-badge-strong: #d9684a;
+  --medical-alert-background: #fbdad6;
+  --medical-alert-icon: #f4a8a0;
+  --medical-alert-heading: #c5413a;
+  --medical-alert-copy: #b25249;
+  --link-badge-soft: #f9d2de;
+  --link-badge-strong: #c56486;
+  --parent-active-soft: #cfebd8;
+  --parent-active-strong: #3e9b6c;
+  --parent-pending-soft: #f7e7a6;
+  --parent-pending-strong: #9a7b1e;
+  --parent-link-border: #d8cbba;
+  --avatar-pink-soft: #f4b8cc;
+  --avatar-pink-strong: #c44a7a;
+  --avatar-green-soft: #b9dec4;
+  --avatar-green-strong: #3e8b62;
+  --avatar-yellow-soft: #f4dc8e;
+  --avatar-yellow-strong: #9a7b1e;
+  --avatar-purple-soft: #c9b6e8;
+  --avatar-purple-strong: #7b5fc0;
+  --avatar-parent-blue: #a9c7e8;
 }
 
 @theme inline {
@@ -61,6 +84,29 @@
   --color-photo-background: var(--photo-background);
   --color-photo-border: var(--photo-border);
   --color-photo-foreground: var(--photo-foreground);
+  --color-chevron: var(--chevron);
+  --color-medical-badge-soft: var(--medical-badge-soft);
+  --color-medical-badge-strong: var(--medical-badge-strong);
+  --color-medical-alert-background: var(--medical-alert-background);
+  --color-medical-alert-icon: var(--medical-alert-icon);
+  --color-medical-alert-heading: var(--medical-alert-heading);
+  --color-medical-alert-copy: var(--medical-alert-copy);
+  --color-link-badge-soft: var(--link-badge-soft);
+  --color-link-badge-strong: var(--link-badge-strong);
+  --color-parent-active-soft: var(--parent-active-soft);
+  --color-parent-active-strong: var(--parent-active-strong);
+  --color-parent-pending-soft: var(--parent-pending-soft);
+  --color-parent-pending-strong: var(--parent-pending-strong);
+  --color-parent-link-border: var(--parent-link-border);
+  --color-avatar-pink-soft: var(--avatar-pink-soft);
+  --color-avatar-pink-strong: var(--avatar-pink-strong);
+  --color-avatar-green-soft: var(--avatar-green-soft);
+  --color-avatar-green-strong: var(--avatar-green-strong);
+  --color-avatar-yellow-soft: var(--avatar-yellow-soft);
+  --color-avatar-yellow-strong: var(--avatar-yellow-strong);
+  --color-avatar-purple-soft: var(--avatar-purple-soft);
+  --color-avatar-purple-strong: var(--avatar-purple-strong);
+  --color-avatar-parent-blue: var(--avatar-parent-blue);
   --font-sans: var(--font-nunito);
   --font-display: var(--font-fredoka);
 }
