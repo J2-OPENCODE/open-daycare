@@ -1,6 +1,6 @@
 # SPEC 02 — Listado y perfiles de niños
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01
 > **Fecha:** 2026-09-02
 > **Objetivo:** Implementar un listado buscable en `/kids` y perfiles estáticos en `/kids/[id]`, responsive y visualmente fieles a `ninos.dc.html` y `perfil-nino.dc.html`, integrados con la navegación existente.
@@ -169,34 +169,34 @@ Cada paso debe conservar `npm run dev` funcional y no debe crear enlaces a rutas
 
 - [ ] Visitar `/kids` muestra la pantalla Niños de OpenDayCare y conserva el shell visual establecido por SPEC 01.
 - [ ] A 1200 x 800, una comparación manual lado a lado con `referencias/pantallas/ninos.dc.html` confirma la misma estructura, medidas, espaciado, paleta, bordes, radios, sombras, tipografía e iconografía, salvo diferencias inevitables de antialiasing.
-- [ ] El listado muestra exactamente ocho tarjetas, en el orden Mateo, Sofía, Benjamín, Valentina, Tomás, Emma, Lucas y Olivia.
-- [ ] Cada tarjeta muestra el nombre, edad, cantidad de padres, avatar e insignia definidos por la referencia y por las fixtures cerradas.
-- [ ] Cada tarjeta es un enlace a `/kids/{id}` y los ocho enlaces usan un identificador único de `data/kids.ts`.
+- [x] El listado muestra exactamente ocho tarjetas, en el orden Mateo, Sofía, Benjamín, Valentina, Tomás, Emma, Lucas y Olivia.
+- [x] Cada tarjeta muestra el nombre, edad, cantidad de padres, avatar e insignia definidos por la referencia y por las fixtures cerradas.
+- [x] Cada tarjeta es un enlace a `/kids/{id}` y los ocho enlaces usan un identificador único de `data/kids.ts`.
 - [ ] Escribir `sofia` encuentra a Sofía Méndez aunque la consulta no contenga tilde ni respete mayúsculas.
 - [ ] La búsqueda filtra al escribir por cualquier fragmento del nombre completo y no busca por otros atributos.
 - [ ] Una consulta sin coincidencias muestra un estado vacío explícito y no conserva tarjetas ocultas visualmente.
 - [ ] Vaciar la búsqueda restaura las ocho tarjetas en su orden original.
 - [ ] Visitar `/kids/mateo-fernandez` reproduce el contenido, la jerarquía y la distribución de `referencias/pantallas/perfil-nino.dc.html` con sus datos literales.
-- [ ] Cada uno de los ocho identificadores definidos abre un perfil con el nombre, avatar, edad, nacimiento, sala, ingreso, notas y padres exactos de esta spec.
+- [x] Cada uno de los ocho identificadores definidos abre un perfil con el nombre, avatar, edad, nacimiento, sala, ingreso, notas y padres exactos de esta spec.
 - [ ] Un perfil sin alertas muestra `Sin alergias ni notas registradas` con un estilo neutro que no se confunde con una advertencia.
-- [ ] El perfil de Valentina muestra `Sin padres vinculados` y conserva visible la acción deshabilitada para vincular un padre.
-- [ ] Los padres activos muestran la insignia `ACTIVA` y Diego Fernández muestra la insignia `PENDIENTE` y el texto de invitación enviada.
+- [x] El perfil de Valentina muestra `Sin padres vinculados` y conserva visible la acción deshabilitada para vincular un padre.
+- [x] Los padres activos muestran la insignia `ACTIVA` y Diego Fernández muestra la insignia `PENDIENTE` y el texto de invitación enviada.
 - [ ] El enlace `Volver a Niños` navega desde cualquier perfil hasta `/kids`.
-- [ ] Visitar `/kids/un-id-inexistente` devuelve la página 404 de Next.js.
+- [x] Visitar `/kids/un-id-inexistente` devuelve la página 404 de Next.js.
 - [ ] Agregar niño, Editar, Resumen del día y Vincular padre se anuncian semánticamente como no disponibles, no cambian estado y no navegan.
-- [ ] Feed enlaza a `/`, Niños enlaza a `/kids` y el destino correspondiente usa `aria-current="page"` tanto en escritorio como en móvil.
+- [x] Feed enlaza a `/`, Niños enlaza a `/kids` y el destino correspondiente usa `aria-current="page"` tanto en escritorio como en móvil.
 - [ ] Avisos y Mi cuenta continúan visibles, semánticamente deshabilitados y sin navegación.
-- [ ] `/kids` y `/kids/[id]` reutilizan los componentes existentes `Sidebar`, `MobileNavigation`, `Brand`, `Avatar` e iconos aplicables; no incorporan implementaciones duplicadas de esas responsabilidades.
+- [x] `/kids` y `/kids/[id]` reutilizan los componentes existentes `Sidebar`, `MobileNavigation`, `Brand`, `Avatar` e iconos aplicables; no incorporan implementaciones duplicadas de esas responsabilidades.
 - [ ] La ruta `/` conserva los datos, el layout y el comportamiento aceptados en SPEC 01 después de adoptar `AppShell` y el avatar compartido.
 - [ ] En anchos menores de 768 px desaparece el sidebar y aparecen la cabecera compacta y la navegación inferior con Niños como destino actual.
 - [ ] A 390 x 844, `/kids` usa una sola columna, no tiene scroll horizontal y la última tarjeta puede desplazarse por encima de la navegación inferior.
 - [ ] A 390 x 844, `/kids/mateo-fernandez` apila el contenido principal y los padres, no recorta textos ni controles y permite volver al listado.
 - [ ] La paleta permanece fiel a las referencias independientemente de la preferencia de tema del sistema.
 - [ ] La consola del navegador no muestra errores ni advertencias producidos por `/`, `/kids` o los perfiles.
-- [ ] `npm run lint -- app components data types` finaliza correctamente.
-- [ ] `npx tsc --noEmit` finaliza correctamente.
-- [ ] `npm run build` finaliza correctamente y genera correctamente las rutas estáticas basadas en fixtures.
-- [ ] `package.json` y `package-lock.json` no incorporan nuevas dependencias para esta implementación.
+- [x] `npm run lint -- app components data types` finaliza correctamente.
+- [x] `npx tsc --noEmit` finaliza correctamente.
+- [x] `npm run build` finaliza correctamente y genera correctamente las rutas estáticas basadas en fixtures.
+- [x] `package.json` y `package-lock.json` no incorporan nuevas dependencias para esta implementación.
 
 ## Decisiones
 
