@@ -53,6 +53,15 @@
   --avatar-purple-soft: #c9b6e8;
   --avatar-purple-strong: #7b5fc0;
   --avatar-parent-blue: #a9c7e8;
+  --auth-background: #fbf4ec;
+  --auth-panel-start: #f6a98e;
+  --auth-panel-end: #ec7e62;
+  --auth-input-border: #eadfd0;
+  --auth-password-border: #f2a78e;
+  --auth-placeholder: #b6a99b;
+  --auth-consent-background: #fbf1d6;
+  --auth-consent-check: #5fb97e;
+  --auth-consent-copy: #8a7234;
 }
 
 @theme inline {
@@ -107,6 +116,15 @@
   --color-avatar-purple-soft: var(--avatar-purple-soft);
   --color-avatar-purple-strong: var(--avatar-purple-strong);
   --color-avatar-parent-blue: var(--avatar-parent-blue);
+  --color-auth-background: var(--auth-background);
+  --color-auth-panel-start: var(--auth-panel-start);
+  --color-auth-panel-end: var(--auth-panel-end);
+  --color-auth-input-border: var(--auth-input-border);
+  --color-auth-password-border: var(--auth-password-border);
+  --color-auth-placeholder: var(--auth-placeholder);
+  --color-auth-consent-background: var(--auth-consent-background);
+  --color-auth-consent-check: var(--auth-consent-check);
+  --color-auth-consent-copy: var(--auth-consent-copy);
   --font-sans: var(--font-nunito);
   --font-display: var(--font-fredoka);
 }
