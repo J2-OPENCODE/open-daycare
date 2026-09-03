@@ -1,6 +1,6 @@
 # SPEC 03 — Login y activación de cuenta
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 02
 > **Fecha:** 2026-09-02
 > **Objetivo:** Implementar `/login` y `/activate-account` como réplicas responsive y únicamente visuales de las referencias, reutilizando los patrones y componentes existentes.
