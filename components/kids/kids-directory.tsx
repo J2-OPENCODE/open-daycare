@@ -1,10 +1,11 @@
 "use client";
 
-import { SearchIcon } from "@/components/icons";
+import { CheckIcon, SearchIcon } from "@/components/icons";
+import { AddKidModal } from "@/components/kids/add-kid-modal";
 import { KidCard } from "@/components/kids/kid-card";
 import { KidsHeader } from "@/components/kids/kids-header";
 import type { Kid, KidsData } from "@/types/kids";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const diacriticMarks = /[\u0300-\u036f]/g;
 
@@ -22,15 +23,68 @@ function normalizeText(value: string) {
 
 export function KidsDirectory({ roomName, kids }: KidsDirectoryProps) {
   const [query, setQuery] = useState("");
+  const [isAddKidOpen, setIsAddKidOpen] = useState(false);
+  const [showAddKidSuccess, setShowAddKidSuccess] = useState(false);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
   const normalizedQuery = normalizeText(query.trim());
   const filteredKids = normalizedQuery
     ? kids.filter((kid) => normalizeText(kid.name).includes(normalizedQuery))
     : kids;
   const resultCountLabel = `${filteredKids.length} ${filteredKids.length === 1 ? "niño" : "niños"}`;
 
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current) {
+        clearTimeout(successTimerRef.current);
+      }
+    };
+  }, []);
+
+  function clearSuccessTimer() {
+    if (successTimerRef.current) {
+      clearTimeout(successTimerRef.current);
+      successTimerRef.current = null;
+    }
+  }
+
+  function handleOpenAddKid() {
+    clearSuccessTimer();
+    setShowAddKidSuccess(false);
+    setIsAddKidOpen(true);
+  }
+
+  function handleAddKidSubmit() {
+    setIsAddKidOpen(false);
+    setShowAddKidSuccess(true);
+    clearSuccessTimer();
+    successTimerRef.current = setTimeout(() => {
+      setShowAddKidSuccess(false);
+      successTimerRef.current = null;
+    }, 3000);
+  }
+
   return (
     <>
-      <KidsHeader />
+      <KidsHeader onAddKid={handleOpenAddKid} />
+
+      <AddKidModal
+        isOpen={isAddKidOpen}
+        onClose={() => setIsAddKidOpen(false)}
+        onSubmit={handleAddKidSubmit}
+      />
+
+      {showAddKidSuccess ? (
+        <div
+          className="fixed top-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2.5 rounded-[14px] border border-achievement-strong/20 bg-surface px-4 py-3 text-[14px] font-bold text-foreground shadow-[0_12px_30px_-14px_rgba(63,54,46,0.45)]"
+          role="status"
+          aria-live="polite"
+        >
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-achievement-soft text-achievement-strong">
+            <CheckIcon size={14} />
+          </span>
+          Niño agregado correctamente
+        </div>
+      ) : null}
 
       <label className="mb-[22px] flex items-center gap-[11px] rounded-[14px] border border-border bg-surface px-4 py-3">
         <span className="sr-only">Buscar niño por nombre</span>

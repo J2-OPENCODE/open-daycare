@@ -111,47 +111,47 @@ Cada paso debe conservar `npm run dev` funcional y no debe crear navegación, re
 
 ## Criterios de aceptación
 
-- [ ] Visitar `/kids` conserva los ocho niños, el contador y el shell visual definidos en SPEC 02.
-- [ ] El botón Agregar niño está habilitado, puede recibir foco y abre el modal sin navegar a otra URL.
-- [ ] Al abrir el modal, `/kids` permanece visible detrás de un fondo semitransparente difuminado que bloquea la interacción con el resto de la página.
-- [ ] El modal usa un `<dialog>` con nombre accesible `Agregar niño` y coloca el foco dentro del formulario.
-- [ ] A 1200 x 800, el modal conserva la composición, proporciones, tipografía, paleta, bordes, radios y sombras de `referencias/pantallas/agregar-nino.dc.html`, además de las mejoras visuales acordadas.
-- [ ] El formulario muestra Nombre completo, Fecha de nacimiento, Sala, Alergias y Notas médicas en ese orden.
-- [ ] Nombre completo, Fecha de nacimiento y Sala muestran un asterisco y se anuncian como obligatorios.
-- [ ] Alergias y Notas médicas muestran el texto `(opcional)` y no son obligatorios.
-- [ ] Sala comienza con `Seleccioná una sala` y ofrece exactamente `Sala 1`, `Sala 2` y `Sala 3`.
-- [ ] El campo Fecha de nacimiento presenta el placeholder `dd/mm/aaaa`, solicita teclado numérico en dispositivos compatibles e inserta las barras mientras se escriben hasta ocho dígitos.
-- [ ] Intentar guardar los cinco campos vacíos mantiene el modal abierto y muestra errores para Nombre completo, Fecha de nacimiento y Sala.
-- [ ] Un Nombre completo compuesto únicamente por espacios se considera inválido.
-- [ ] Un Nombre completo con al menos un carácter no vacío se considera válido sin exigir apellido ni longitud mínima adicional.
-- [ ] Fechas con formato incompleto o distinto de `dd/mm/aaaa` se consideran inválidas.
-- [ ] Fechas inexistentes como `31/02/2024` se consideran inválidas.
-- [ ] Una fecha futura respecto del día local se considera inválida.
-- [ ] Una fecha real no futura, incluida una fecha bisiesta válida como `29/02/2024`, supera la validación.
-- [ ] Cada error está asociado semánticamente con su campo y desaparece cuando el valor corregido pasa a ser válido.
-- [ ] El primer campo inválido recibe foco después de intentar guardar.
-- [ ] Alergias acepta texto libre como `Maní, Lactosa` sin generar chips ni errores.
-- [ ] Notas médicas acepta texto multilínea y puede permanecer vacío.
-- [ ] Un formulario válido puede enviarse con Alergias y Notas médicas vacías.
-- [ ] Guardar un formulario válido cierra el modal, limpia los cinco campos y muestra temporalmente `Niño agregado correctamente` en una región anunciada sin interrumpir.
-- [ ] Después de un envío válido, el listado continúa mostrando exactamente ocho niños y no crea una tarjeta, un perfil ni una nueva ruta.
-- [ ] Reabrir el modal después de guardar muestra todos los campos vacíos y Sala sin selección.
-- [ ] Cancelar cierra el modal, descarta los valores y devuelve el foco al botón Agregar niño.
-- [ ] Presionar Escape cierra el modal, descarta los valores y devuelve el foco al botón Agregar niño.
-- [ ] Hacer clic directamente sobre el fondo cierra el modal y descarta los valores.
-- [ ] Hacer clic dentro de la tarjeta no cierra el modal salvo que se active Cancelar o se complete un envío válido.
-- [ ] Reabrir el modal después de cualquier cancelación no recupera el borrador descartado.
-- [ ] En anchos menores de 768 px, Fecha de nacimiento y Sala se apilan y conservan el orden de lectura.
-- [ ] A 390 x 844, la tarjeta mantiene márgenes respecto del viewport, permite desplazar su contenido y no presenta scroll horizontal ni campos recortados.
-- [ ] El modal y su aviso temporal aparecen por encima de la cabecera y la navegación móvil.
-- [ ] La animación de apertura se desactiva o reduce cuando el sistema solicita movimiento reducido.
-- [ ] Cerrar el modal no borra ni modifica la consulta activa del buscador de niños.
-- [ ] La paleta permanece fiel a las referencias independientemente de la preferencia de tema del sistema.
-- [ ] La consola del navegador no muestra errores ni advertencias producidos al abrir, validar, enviar o cerrar el modal.
-- [ ] `npm run lint -- app components data types lib` finaliza correctamente.
-- [ ] `npx tsc --noEmit` finaliza correctamente.
-- [ ] `npm run build` finaliza correctamente.
-- [ ] `package.json` y `package-lock.json` no incorporan nuevas dependencias.
+- [x] Visitar `/kids` conserva los ocho niños, el contador y el shell visual definidos en SPEC 02.
+- [x] El botón Agregar niño está habilitado, puede recibir foco y abre el modal sin navegar a otra URL.
+- [x] Al abrir el modal, `/kids` permanece visible detrás de un fondo semitransparente difuminado que bloquea la interacción con el resto de la página.
+- [x] El modal usa un `<dialog>` con nombre accesible `Agregar niño` y coloca el foco dentro del formulario.
+- [x] A 1200 x 800, el modal conserva la composición, proporciones, tipografía, paleta, bordes, radios y sombras de `referencias/pantallas/agregar-nino.dc.html`, además de las mejoras visuales acordadas.
+- [x] El formulario muestra Nombre completo, Fecha de nacimiento, Sala, Alergias y Notas médicas en ese orden.
+- [x] Nombre completo, Fecha de nacimiento y Sala muestran un asterisco y se anuncian como obligatorios.
+- [x] Alergias y Notas médicas muestran el texto `(opcional)` y no son obligatorios.
+- [x] Sala comienza con `Seleccioná una sala` y ofrece exactamente `Sala 1`, `Sala 2` y `Sala 3`.
+- [x] El campo Fecha de nacimiento presenta el placeholder `dd/mm/aaaa`, solicita teclado numérico en dispositivos compatibles e inserta las barras mientras se escriben hasta ocho dígitos.
+- [x] Intentar guardar los cinco campos vacíos mantiene el modal abierto y muestra errores para Nombre completo, Fecha de nacimiento y Sala.
+- [x] Un Nombre completo compuesto únicamente por espacios se considera inválido.
+- [x] Un Nombre completo con al menos un carácter no vacío se considera válido sin exigir apellido ni longitud mínima adicional.
+- [x] Fechas con formato incompleto o distinto de `dd/mm/aaaa` se consideran inválidas.
+- [x] Fechas inexistentes como `31/02/2024` se consideran inválidas.
+- [x] Una fecha futura respecto del día local se considera inválida.
+- [x] Una fecha real no futura, incluida una fecha bisiesta válida como `29/02/2024`, supera la validación.
+- [x] Cada error está asociado semánticamente con su campo y desaparece cuando el valor corregido pasa a ser válido.
+- [x] El primer campo inválido recibe foco después de intentar guardar.
+- [x] Alergias acepta texto libre como `Maní, Lactosa` sin generar chips ni errores.
+- [x] Notas médicas acepta texto multilínea y puede permanecer vacío.
+- [x] Un formulario válido puede enviarse con Alergias y Notas médicas vacías.
+- [x] Guardar un formulario válido cierra el modal, limpia los cinco campos y muestra temporalmente `Niño agregado correctamente` en una región anunciada sin interrumpir.
+- [x] Después de un envío válido, el listado continúa mostrando exactamente ocho niños y no crea una tarjeta, un perfil ni una nueva ruta.
+- [x] Reabrir el modal después de guardar muestra todos los campos vacíos y Sala sin selección.
+- [x] Cancelar cierra el modal, descarta los valores y devuelve el foco al botón Agregar niño.
+- [x] Presionar Escape cierra el modal, descarta los valores y devuelve el foco al botón Agregar niño.
+- [x] Hacer clic directamente sobre el fondo cierra el modal y descarta los valores.
+- [x] Hacer clic dentro de la tarjeta no cierra el modal salvo que se active Cancelar o se complete un envío válido.
+- [x] Reabrir el modal después de cualquier cancelación no recupera el borrador descartado.
+- [x] En anchos menores de 768 px, Fecha de nacimiento y Sala se apilan y conservan el orden de lectura.
+- [x] A 390 x 844, la tarjeta mantiene márgenes respecto del viewport, permite desplazar su contenido y no presenta scroll horizontal ni campos recortados.
+- [x] El modal y su aviso temporal aparecen por encima de la cabecera y la navegación móvil.
+- [x] La animación de apertura se desactiva o reduce cuando el sistema solicita movimiento reducido.
+- [x] Cerrar el modal no borra ni modifica la consulta activa del buscador de niños.
+- [x] La paleta permanece fiel a las referencias independientemente de la preferencia de tema del sistema.
+- [x] La consola del navegador no muestra errores ni advertencias producidos al abrir, validar, enviar o cerrar el modal.
+- [x] `npm run lint -- app components data types lib` finaliza correctamente.
+- [x] `npx tsc --noEmit` finaliza correctamente.
+- [x] `npm run build` finaliza correctamente.
+- [x] `package.json` y `package-lock.json` no incorporan nuevas dependencias.
 
 ## Decisiones
 
