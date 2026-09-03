@@ -1,6 +1,6 @@
 # SPEC 03 — Login y activación de cuenta
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 02
 > **Fecha:** 2026-09-02
 > **Objetivo:** Implementar `/login` y `/activate-account` como réplicas responsive y únicamente visuales de las referencias, reutilizando los patrones y componentes existentes.
@@ -111,33 +111,33 @@ Cada paso debe conservar `npm run dev` funcional y no debe crear enlaces a rutas
 
 ## Criterios de aceptación
 
-- [ ] Visitar `/login` muestra la pantalla de acceso de OpenDayCare sin sidebar, cabecera móvil ni navegación inferior del área autenticada.
-- [ ] Visitar `/activate-account` muestra la pantalla de activación sin sidebar, cabecera móvil ni navegación inferior del área autenticada.
-- [ ] Las rutas viven en `app/(auth)/` y sus URLs públicas no incluyen el segmento `(auth)`.
-- [ ] A 1200 x 800, `/login` reproduce la estructura, medidas, espaciado, paleta, bordes, radios, sombras, tipografía e iconografía de `login.dc.html`, salvo la eliminación acordada del selector de rol y diferencias inevitables de antialiasing.
-- [ ] `/login` no muestra el rótulo `INGRESO COMO`, el botón Personal ni el botón Familia.
-- [ ] El login muestra `caro@opendaycare.com` como email inicial y `••••••••` como placeholder de contraseña.
-- [ ] El email y la contraseña del login pueden editarse sin disparar validaciones ni almacenar sus valores fuera del input.
-- [ ] Iniciar sesión conserva el estilo principal de la referencia, está semánticamente deshabilitado y no navega ni modifica estado.
-- [ ] ¿Olvidaste tu contraseña? permanece visible, se anuncia como no disponible y no navega.
-- [ ] Activá tu cuenta navega de `/login` a `/activate-account` mediante `next/link`.
-- [ ] A 1200 x 800, `/activate-account` reproduce la estructura, medidas, espaciado, paleta, bordes, radios, sombras, tipografía e iconografía de `activar-cuenta.dc.html`, salvo diferencias inevitables de antialiasing.
-- [ ] La activación muestra `Mateo · Sala Soles` y reutiliza el avatar de Mateo definido en `data/kids.ts`.
-- [ ] La activación muestra inicialmente el código `7K4P9`, el email `lucia.fernandez@gmail.com` y la contraseña precargada de la referencia.
-- [ ] Los tres inputs de activación pueden editarse sin disparar validaciones ni persistir sus valores.
-- [ ] El consentimiento comienza marcado y puede alternarse sin condicionar ninguna acción.
-- [ ] Activar mi cuenta conserva el estilo principal de la referencia, está semánticamente deshabilitado y no navega ni modifica estado.
-- [ ] Iniciar sesión navega de `/activate-account` a `/login` mediante `next/link`.
-- [ ] `AuthBrand`, `AuthField` y `AuthPrimaryAction` se reutilizan entre ambas pantallas y no existen implementaciones duplicadas de esas responsabilidades.
-- [ ] Las pantallas reutilizan Fredoka, Nunito, `SunIcon`, `Avatar` y los tokens existentes aplicables.
-- [ ] En anchos menores de 768 px, el login oculta el panel coral y muestra una marca compacta junto al formulario.
-- [ ] A 390 x 844, ambas pantallas conservan toda la información, no presentan scroll horizontal y ningún campo o enlace queda recortado.
-- [ ] La paleta permanece fiel a las referencias independientemente de la preferencia de tema del sistema.
-- [ ] La consola del navegador no muestra errores ni advertencias producidos por estas pantallas.
-- [ ] `npm run lint -- app components data types` finaliza correctamente.
-- [ ] `npx tsc --noEmit` finaliza correctamente.
-- [ ] `npm run build` finaliza correctamente.
-- [ ] `package.json` y `package-lock.json` no incorporan nuevas dependencias.
+- [x] Visitar `/login` muestra la pantalla de acceso de OpenDayCare sin sidebar, cabecera móvil ni navegación inferior del área autenticada.
+- [x] Visitar `/activate-account` muestra la pantalla de activación sin sidebar, cabecera móvil ni navegación inferior del área autenticada.
+- [x] Las rutas viven en `app/(auth)/` y sus URLs públicas no incluyen el segmento `(auth)`.
+- [x] A 1200 x 800, `/login` reproduce la estructura, medidas, espaciado, paleta, bordes, radios, sombras, tipografía e iconografía de `login.dc.html`, salvo la eliminación acordada del selector de rol y diferencias inevitables de antialiasing.
+- [x] `/login` no muestra el rótulo `INGRESO COMO`, el botón Personal ni el botón Familia.
+- [x] El login muestra `caro@opendaycare.com` como email inicial y `••••••••` como placeholder de contraseña.
+- [x] El email y la contraseña del login pueden editarse sin disparar validaciones ni almacenar sus valores fuera del input.
+- [x] Iniciar sesión conserva el estilo principal de la referencia, está semánticamente deshabilitado y no navega ni modifica estado.
+- [x] ¿Olvidaste tu contraseña? permanece visible, se anuncia como no disponible y no navega.
+- [x] Activá tu cuenta navega de `/login` a `/activate-account` mediante `next/link`.
+- [x] A 1200 x 800, `/activate-account` reproduce la estructura, medidas, espaciado, paleta, bordes, radios, sombras, tipografía e iconografía de `activar-cuenta.dc.html`, salvo diferencias inevitables de antialiasing.
+- [x] La activación muestra `Mateo · Sala Soles` y reutiliza el avatar de Mateo definido en `data/kids.ts`.
+- [x] La activación muestra inicialmente el código `7K4P9`, el email `lucia.fernandez@gmail.com` y la contraseña precargada de la referencia.
+- [x] Los tres inputs de activación pueden editarse sin disparar validaciones ni persistir sus valores.
+- [x] El consentimiento comienza marcado y puede alternarse sin condicionar ninguna acción.
+- [x] Activar mi cuenta conserva el estilo principal de la referencia, está semánticamente deshabilitado y no navega ni modifica estado.
+- [x] Iniciar sesión navega de `/activate-account` a `/login` mediante `next/link`.
+- [x] `AuthBrand`, `AuthField` y `AuthPrimaryAction` se reutilizan entre ambas pantallas y no existen implementaciones duplicadas de esas responsabilidades.
+- [x] Las pantallas reutilizan Fredoka, Nunito, `SunIcon`, `Avatar` y los tokens existentes aplicables.
+- [x] En anchos menores de 768 px, el login oculta el panel coral y muestra una marca compacta junto al formulario.
+- [x] A 390 x 844, ambas pantallas conservan toda la información, no presentan scroll horizontal y ningún campo o enlace queda recortado.
+- [x] La paleta permanece fiel a las referencias independientemente de la preferencia de tema del sistema.
+- [x] La consola del navegador no muestra errores ni advertencias producidos por estas pantallas.
+- [x] `npm run lint -- app components data types` finaliza correctamente.
+- [x] `npx tsc --noEmit` finaliza correctamente.
+- [x] `npm run build` finaliza correctamente.
+- [x] `package.json` y `package-lock.json` no incorporan nuevas dependencias.
 
 ## Decisiones
 
