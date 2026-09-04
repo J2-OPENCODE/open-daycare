@@ -13,13 +13,12 @@ import {
   type AddKidRoom,
   type RequiredAddKidField,
 } from "@/lib/add-kid-form";
+import { ModalDialog } from "@/components/ui/modal-dialog";
 import {
   useEffect,
   useRef,
   useState,
   type FormEvent,
-  type MouseEvent,
-  type SyntheticEvent,
 } from "react";
 
 const labelClassName =
@@ -30,42 +29,23 @@ const fieldClassName =
 type AddKidModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  onAfterClose: () => void;
   onSubmit: (values: AddKidFormValues) => void;
 };
 
-export function AddKidModal({ isOpen, onClose, onSubmit }: AddKidModalProps) {
+export function AddKidModal({
+  isOpen,
+  onClose,
+  onAfterClose,
+  onSubmit,
+}: AddKidModalProps) {
   const [values, setValues] = useState(INITIAL_ADD_KID_FORM_VALUES);
   const [errors, setErrors] = useState<AddKidFormErrors>({});
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const fullNameRef = useRef<HTMLInputElement>(null);
   const birthDateRef = useRef<HTMLInputElement>(null);
   const roomRef = useRef<HTMLSelectElement>(null);
-  const returnFocusRef = useRef<HTMLElement>(null);
   const pendingFocusRef = useRef<RequiredAddKidField>(null);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-
-    if (!dialog) {
-      return;
-    }
-
-    if (isOpen && !dialog.open) {
-      const activeElement = document.activeElement;
-      returnFocusRef.current =
-        activeElement instanceof HTMLElement ? activeElement : null;
-      dialog.showModal();
-      fullNameRef.current?.focus();
-      return;
-    }
-
-    if (!isOpen && dialog.open) {
-      dialog.close();
-      returnFocusRef.current?.focus();
-      returnFocusRef.current = null;
-    }
-  }, [isOpen]);
 
   useEffect(() => {
     const field = pendingFocusRef.current;
@@ -95,17 +75,6 @@ export function AddKidModal({ isOpen, onClose, onSubmit }: AddKidModalProps) {
   function requestClose() {
     resetForm();
     onClose();
-  }
-
-  function handleCancel(event: SyntheticEvent<HTMLDialogElement>) {
-    event.preventDefault();
-    requestClose();
-  }
-
-  function handleBackdropClick(event: MouseEvent<HTMLDialogElement>) {
-    if (event.target === event.currentTarget) {
-      requestClose();
-    }
   }
 
   function revalidateField(
@@ -166,15 +135,16 @@ export function AddKidModal({ isOpen, onClose, onSubmit }: AddKidModalProps) {
   }
 
   return (
-    <dialog
-      ref={dialogRef}
-      className="add-kid-dialog fixed inset-0 m-auto max-h-[calc(100dvh_-_2rem)] w-[calc(100%_-_2rem)] max-w-[520px] overflow-visible border-0 bg-transparent p-0 text-foreground"
-      aria-labelledby="add-kid-modal-title"
-      onCancel={handleCancel}
-      onClick={handleBackdropClick}
+    <ModalDialog
+      isOpen={isOpen}
+      onClose={requestClose}
+      onAfterClose={onAfterClose}
+      ariaLabelledBy="add-kid-modal-title"
+      initialFocusRef={fullNameRef}
+      className="fixed inset-0 m-auto max-h-[calc(100dvh_-_2rem)] w-[calc(100%_-_2rem)] max-w-[520px] overflow-visible border-0 bg-transparent p-0 text-foreground"
     >
       <form
-        className="add-kid-dialog-panel flex max-h-[calc(100dvh_-_2rem)] flex-col overflow-hidden rounded-[24px] border border-border bg-modal-card shadow-[var(--modal-shadow)]"
+        className="modal-dialog-panel flex max-h-[calc(100dvh_-_2rem)] flex-col overflow-hidden rounded-[24px] border border-border bg-modal-card shadow-[var(--modal-shadow)]"
         noValidate
         onSubmit={handleSubmit}
       >
@@ -372,6 +342,6 @@ export function AddKidModal({ isOpen, onClose, onSubmit }: AddKidModalProps) {
           </div>
         </div>
       </form>
-    </dialog>
+    </ModalDialog>
   );
 }

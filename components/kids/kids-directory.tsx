@@ -1,9 +1,10 @@
 "use client";
 
-import { CheckIcon, SearchIcon } from "@/components/icons";
+import { SearchIcon } from "@/components/icons";
 import { AddKidModal } from "@/components/kids/add-kid-modal";
 import { KidCard } from "@/components/kids/kid-card";
 import { KidsHeader } from "@/components/kids/kids-header";
+import { SuccessNotice } from "@/components/ui/success-notice";
 import type { Kid, KidsData } from "@/types/kids";
 import { useEffect, useRef, useState } from "react";
 
@@ -26,6 +27,7 @@ export function KidsDirectory({ roomName, kids }: KidsDirectoryProps) {
   const [isAddKidOpen, setIsAddKidOpen] = useState(false);
   const [showAddKidSuccess, setShowAddKidSuccess] = useState(false);
   const successTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const pendingSuccessRef = useRef(false);
   const normalizedQuery = normalizeText(query.trim());
   const filteredKids = normalizedQuery
     ? kids.filter((kid) => normalizeText(kid.name).includes(normalizedQuery))
@@ -49,12 +51,22 @@ export function KidsDirectory({ roomName, kids }: KidsDirectoryProps) {
 
   function handleOpenAddKid() {
     clearSuccessTimer();
+    pendingSuccessRef.current = false;
     setShowAddKidSuccess(false);
     setIsAddKidOpen(true);
   }
 
   function handleAddKidSubmit() {
+    pendingSuccessRef.current = true;
     setIsAddKidOpen(false);
+  }
+
+  function handleAddKidAfterClose() {
+    if (!pendingSuccessRef.current) {
+      return;
+    }
+
+    pendingSuccessRef.current = false;
     setShowAddKidSuccess(true);
     clearSuccessTimer();
     successTimerRef.current = setTimeout(() => {
@@ -70,21 +82,13 @@ export function KidsDirectory({ roomName, kids }: KidsDirectoryProps) {
       <AddKidModal
         isOpen={isAddKidOpen}
         onClose={() => setIsAddKidOpen(false)}
+        onAfterClose={handleAddKidAfterClose}
         onSubmit={handleAddKidSubmit}
       />
 
-      {showAddKidSuccess ? (
-        <div
-          className="fixed top-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2.5 rounded-[14px] border border-achievement-strong/20 bg-surface px-4 py-3 text-[14px] font-bold text-foreground shadow-[0_12px_30px_-14px_rgba(63,54,46,0.45)]"
-          role="status"
-          aria-live="polite"
-        >
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-achievement-soft text-achievement-strong">
-            <CheckIcon size={14} />
-          </span>
-          Niño agregado correctamente
-        </div>
-      ) : null}
+      <SuccessNotice>
+        {showAddKidSuccess ? "Niño agregado correctamente" : null}
+      </SuccessNotice>
 
       <label className="mb-[22px] flex items-center gap-[11px] rounded-[14px] border border-border bg-surface px-4 py-3">
         <span className="sr-only">Buscar niño por nombre</span>
