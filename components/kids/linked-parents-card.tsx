@@ -1,12 +1,18 @@
+"use client";
+
 import { PlusIcon } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import type { KidParent } from "@/types/kids";
 
 type LinkedParentsCardProps = {
   parents: readonly KidParent[];
+  onLinkParent: () => void;
 };
 
-export function LinkedParentsCard({ parents }: LinkedParentsCardProps) {
+export function LinkedParentsCard({
+  parents,
+  onLinkParent,
+}: LinkedParentsCardProps) {
   return (
     <section
       className="rounded-2xl border border-border bg-surface px-[18px] py-4"
@@ -51,9 +57,12 @@ export function LinkedParentsCard({ parents }: LinkedParentsCardProps) {
 
         <button
           type="button"
-          className="flex items-center gap-3 pt-2 text-left disabled:opacity-100"
-          disabled
-          aria-label="Vincular otro padre (no disponible)"
+          className="flex items-center gap-3 pt-2 text-left outline-none focus-visible:rounded-md focus-visible:ring-2 focus-visible:ring-coral-strong focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+          aria-label="Vincular otro padre"
+          onClick={(event) => {
+            event.currentTarget.focus();
+            onLinkParent();
+          }}
         >
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-[1.5px] border-dashed border-parent-link-border text-photo-foreground">
             <PlusIcon size={18} />

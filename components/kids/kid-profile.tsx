@@ -1,7 +1,7 @@
 import { ArrowLeftIcon, SunIcon } from "@/components/icons";
 import { KidFacts } from "@/components/kids/kid-facts";
+import { ParentLinking } from "@/components/kids/parent-linking";
 import { KidProfileHeader } from "@/components/kids/kid-profile-header";
-import { LinkedParentsCard } from "@/components/kids/linked-parents-card";
 import { MedicalNotesCard } from "@/components/kids/medical-notes-card";
 import type { Kid } from "@/types/kids";
 import Link from "next/link";
@@ -38,7 +38,7 @@ export function KidProfile({ kid }: KidProfileProps) {
             <SunIcon size={18} />
             Resumen del día
           </button>
-          <LinkedParentsCard parents={kid.parents} />
+          <ParentLinking kidName={kid.name} parents={kid.parents} />
         </aside>
       </div>
     </div>
