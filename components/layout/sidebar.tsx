@@ -22,6 +22,7 @@ type SidebarProps = {
   roomName: string;
   currentUser: FeedData["currentUser"];
   currentDestination: AppDestination;
+  onCreatePost?: () => void;
 };
 
 const navigationItems = [
@@ -64,6 +65,7 @@ export function Sidebar({
   roomName,
   currentUser,
   currentDestination,
+  onCreatePost,
 }: SidebarProps) {
   return (
     <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col border-r border-border bg-surface px-4 py-6 md:flex">
@@ -72,8 +74,13 @@ export function Sidebar({
       <button
         type="button"
         className="mb-[18px] flex w-full items-center justify-center gap-2 rounded-[14px] bg-linear-to-b from-coral-start to-coral-end p-3 text-[14.5px] font-extrabold text-white shadow-[0_8px_18px_-8px_rgba(238,129,100,0.75)] disabled:opacity-100"
-        disabled
-        aria-label="Nueva publicación (no disponible)"
+        disabled={!onCreatePost}
+        aria-label={
+          onCreatePost
+            ? "Nueva publicación"
+            : "Nueva publicación (no disponible)"
+        }
+        onClick={onCreatePost}
       >
         <PlusIcon size={17} />
         Nueva publicación

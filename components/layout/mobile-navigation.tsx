@@ -14,6 +14,7 @@ import Link from "next/link";
 type MobileNavigationProps = {
   roomName: string;
   currentDestination: AppDestination;
+  onCreatePost?: () => void;
 };
 
 const navigationItems = [
@@ -26,6 +27,7 @@ const navigationItems = [
 export function MobileNavigation({
   roomName,
   currentDestination,
+  onCreatePost,
 }: MobileNavigationProps) {
   return (
     <>
@@ -34,8 +36,13 @@ export function MobileNavigation({
         <button
           type="button"
           className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-xl bg-linear-to-b from-coral-start to-coral-end text-white shadow-[0_6px_14px_-7px_rgba(238,129,100,0.75)] disabled:opacity-100"
-          disabled
-          aria-label="Nueva publicación (no disponible)"
+          disabled={!onCreatePost}
+          aria-label={
+            onCreatePost
+              ? "Nueva publicación"
+              : "Nueva publicación (no disponible)"
+          }
+          onClick={onCreatePost}
         >
           <PlusIcon size={18} />
         </button>

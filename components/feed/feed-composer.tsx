@@ -4,15 +4,25 @@ import { Avatar } from "@/components/ui/avatar";
 type FeedComposerProps = {
   initials: string;
   prompt: string;
+  onCreatePost?: () => void;
 };
 
-export function FeedComposer({ initials, prompt }: FeedComposerProps) {
+export function FeedComposer({
+  initials,
+  prompt,
+  onCreatePost,
+}: FeedComposerProps) {
   return (
     <button
       type="button"
       className="mb-6 flex w-full items-center gap-3 rounded-[18px] border border-border bg-surface px-3.5 py-3.5 text-left shadow-[0_4px_14px_-10px_rgba(120,90,60,0.4)] disabled:opacity-100 md:gap-3.5 md:px-[18px]"
-      disabled
-      aria-label="Nueva publicación (no disponible)"
+      disabled={!onCreatePost}
+      aria-label={
+        onCreatePost
+          ? `${prompt} Nueva publicación`
+          : `${prompt} Nueva publicación (no disponible)`
+      }
+      onClick={onCreatePost}
     >
       <Avatar
         avatar={{

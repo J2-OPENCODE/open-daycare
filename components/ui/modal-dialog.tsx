@@ -17,6 +17,7 @@ type ModalDialogProps = {
   ariaDescribedBy?: string;
   initialFocusRef?: RefObject<HTMLElement | null>;
   className?: string;
+  dismissible?: boolean;
   children: ReactNode;
 };
 
@@ -28,6 +29,7 @@ export function ModalDialog({
   ariaDescribedBy,
   initialFocusRef,
   className,
+  dismissible = true,
   children,
 }: ModalDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -59,11 +61,14 @@ export function ModalDialog({
 
   function handleCancel(event: SyntheticEvent<HTMLDialogElement>) {
     event.preventDefault();
-    onClose();
+
+    if (dismissible) {
+      onClose();
+    }
   }
 
   function handleBackdropClick(event: MouseEvent<HTMLDialogElement>) {
-    if (event.target === event.currentTarget) {
+    if (dismissible && event.target === event.currentTarget) {
       onClose();
     }
   }
