@@ -1,6 +1,6 @@
 # SPEC 06 — Modal de nueva publicación
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01, SPEC 02, SPEC 05
 > **Fecha:** 2026-09-05
 > **Objetivo:** Implementar en el feed un modal responsive de nueva publicación con selección de destinatarios y tipo, validación local y envío simulado sin persistencia.
@@ -141,57 +141,57 @@ Cada paso debe conservar `npm run dev` funcional y no debe crear publicaciones, 
 
 ## Criterios de aceptación
 
-- [ ] Visitar `/` conserva el contenido, las tres publicaciones y el shell visual definidos en SPEC 01.
-- [ ] El composer del feed está habilitado y abre Nueva publicación sin cambiar la URL.
-- [ ] El botón Nueva publicación del sidebar está habilitado en `/` y abre el mismo modal.
-- [ ] El botón más de la cabecera móvil está habilitado en `/` y abre el mismo modal.
-- [ ] Los accesos de Nueva publicación permanecen deshabilitados en `/kids` y `/kids/[id]`.
-- [ ] Al abrir el modal, el feed permanece visible detrás de un fondo semitransparente difuminado que bloquea su interacción.
-- [ ] El modal usa un `<dialog>` con nombre accesible `Nueva publicación` y coloca el foco en el primer destinatario.
-- [ ] A 1200 x 800, el modal reproduce la composición, proporciones, tipografía, paleta, bordes, radios, sombras e iconografía de `referencias/pantallas/crear-publicacion.dc.html`, salvo el fondo modal acordado y diferencias inevitables de antialiasing.
-- [ ] El formulario muestra PARA, TIPO, DESCRIPCIÓN y FOTOS en ese orden.
-- [ ] PARA muestra exactamente los ocho niños de `kidsData.children` y el botón Toda la sala.
-- [ ] El formulario comienza sin ningún destinatario seleccionado.
-- [ ] Pulsar un niño inactivo lo activa sin desactivar otros niños seleccionados.
-- [ ] Pulsar un niño activo lo desactiva sin modificar los demás.
-- [ ] Seleccionar manualmente los ocho niños mantiene activos los ocho chips individuales y no activa Toda la sala.
-- [ ] Pulsar Toda la sala con niños seleccionados desactiva visualmente todos los chips individuales y deja activo únicamente Toda la sala.
-- [ ] Pulsar Toda la sala cuando ya está activa deja la audiencia vacía.
-- [ ] Pulsar un niño mientras Toda la sala está activa desactiva Toda la sala y deja activo únicamente ese niño.
-- [ ] Cada chip de audiencia comunica su estado mediante `aria-pressed` y puede operarse con teclado.
-- [ ] TIPO ofrece exactamente `Comida`, `Siesta`, `Actividad`, `Logro`, `Ánimo`, `Foto` y `Anuncio`.
-- [ ] Actividad comienza seleccionada y únicamente un tipo puede permanecer activo.
-- [ ] Pulsar el tipo activo no lo desactiva.
-- [ ] Cada tipo comunica su estado mediante `aria-pressed` y puede operarse con teclado.
-- [ ] DESCRIPCIÓN comienza con el texto de témperas acordado y permite editarlo o borrarlo.
-- [ ] FOTOS muestra el placeholder y Agregar con la apariencia de la referencia.
-- [ ] Agregar foto está deshabilitado, no abre un selector de archivos y no recibe foco.
-- [ ] Intentar publicar sin destinatarios mantiene el modal abierto y muestra un error asociado con PARA.
-- [ ] Una descripción vacía o compuesta únicamente por espacios se considera inválida y muestra un error asociado con DESCRIPCIÓN.
-- [ ] Si audiencia y descripción son inválidas, el primer control de PARA recibe foco después de intentar publicar.
-- [ ] Si únicamente la descripción es inválida, el textarea recibe foco después de intentar publicar.
-- [ ] Después del primer intento, cada error desaparece cuando su campo corregido pasa a ser válido.
-- [ ] Cambiar de tipo no introduce errores porque siempre existe exactamente una selección.
-- [ ] Cancelar cierra el modal, conserva audiencia, tipo y descripción, limpia los errores y devuelve el foco al disparador utilizado.
-- [ ] Reabrir después de cancelar recupera el borrador conservado sin mostrar errores anteriores.
-- [ ] Presionar Escape no cierra el modal ni modifica el borrador.
-- [ ] Hacer clic directamente sobre el fondo no cierra el modal ni modifica el borrador.
-- [ ] Hacer clic dentro de la tarjeta no cierra el modal salvo que se active Cancelar o se complete una publicación válida.
-- [ ] Publicar un formulario válido cierra el modal, restaura el foco y reinicia el formulario.
-- [ ] Reabrir después de una publicación válida muestra audiencia vacía, Actividad seleccionada y el texto inicial de referencia.
-- [ ] Una publicación válida no agrega tarjetas, no cambia contadores, no modifica fixtures y no produce solicitudes de red.
-- [ ] Después de una publicación válida no aparece un aviso de confirmación.
-- [ ] `ModalDialog` permite bloquear Escape y fondo para Nueva publicación sin duplicar el comportamiento base del diálogo.
-- [ ] Agregar niño y Vincular padre conservan sus mecanismos de cierre, restauración de foco y demás comportamientos aprobados.
-- [ ] A 390 x 844, la tarjeta mantiene márgenes respecto del viewport, permite desplazar su contenido y no presenta scroll horizontal ni controles recortados.
-- [ ] El modal aparece por encima de la cabecera, el sidebar y la navegación móvil.
-- [ ] La animación de apertura se desactiva o reduce cuando el sistema solicita movimiento reducido.
-- [ ] La paleta permanece fiel a las referencias independientemente de la preferencia de tema del sistema.
-- [ ] La consola del navegador no muestra errores ni advertencias producidos al abrir, seleccionar, validar, publicar o cancelar.
-- [ ] `npm run lint -- app components data types lib` finaliza correctamente.
-- [ ] `npx tsc --noEmit` finaliza correctamente.
-- [ ] `npm run build` finaliza correctamente.
-- [ ] `package.json` y `package-lock.json` no incorporan nuevas dependencias.
+- [x] Visitar `/` conserva el contenido, las tres publicaciones y el shell visual definidos en SPEC 01.
+- [x] El composer del feed está habilitado y abre Nueva publicación sin cambiar la URL.
+- [x] El botón Nueva publicación del sidebar está habilitado en `/` y abre el mismo modal.
+- [x] El botón más de la cabecera móvil está habilitado en `/` y abre el mismo modal.
+- [x] Los accesos de Nueva publicación permanecen deshabilitados en `/kids` y `/kids/[id]`.
+- [x] Al abrir el modal, el feed permanece visible detrás de un fondo semitransparente difuminado que bloquea su interacción.
+- [x] El modal usa un `<dialog>` con nombre accesible `Nueva publicación` y coloca el foco en el primer destinatario.
+- [x] A 1200 x 800, el modal reproduce la composición, proporciones, tipografía, paleta, bordes, radios, sombras e iconografía de `referencias/pantallas/crear-publicacion.dc.html`, salvo el fondo modal acordado y diferencias inevitables de antialiasing.
+- [x] El formulario muestra PARA, TIPO, DESCRIPCIÓN y FOTOS en ese orden.
+- [x] PARA muestra exactamente los ocho niños de `kidsData.children` y el botón Toda la sala.
+- [x] El formulario comienza sin ningún destinatario seleccionado.
+- [x] Pulsar un niño inactivo lo activa sin desactivar otros niños seleccionados.
+- [x] Pulsar un niño activo lo desactiva sin modificar los demás.
+- [x] Seleccionar manualmente los ocho niños mantiene activos los ocho chips individuales y no activa Toda la sala.
+- [x] Pulsar Toda la sala con niños seleccionados desactiva visualmente todos los chips individuales y deja activo únicamente Toda la sala.
+- [x] Pulsar Toda la sala cuando ya está activa deja la audiencia vacía.
+- [x] Pulsar un niño mientras Toda la sala está activa desactiva Toda la sala y deja activo únicamente ese niño.
+- [x] Cada chip de audiencia comunica su estado mediante `aria-pressed` y puede operarse con teclado.
+- [x] TIPO ofrece exactamente `Comida`, `Siesta`, `Actividad`, `Logro`, `Ánimo`, `Foto` y `Anuncio`.
+- [x] Actividad comienza seleccionada y únicamente un tipo puede permanecer activo.
+- [x] Pulsar el tipo activo no lo desactiva.
+- [x] Cada tipo comunica su estado mediante `aria-pressed` y puede operarse con teclado.
+- [x] DESCRIPCIÓN comienza con el texto de témperas acordado y permite editarlo o borrarlo.
+- [x] FOTOS muestra el placeholder y Agregar con la apariencia de la referencia.
+- [x] Agregar foto está deshabilitado, no abre un selector de archivos y no recibe foco.
+- [x] Intentar publicar sin destinatarios mantiene el modal abierto y muestra un error asociado con PARA.
+- [x] Una descripción vacía o compuesta únicamente por espacios se considera inválida y muestra un error asociado con DESCRIPCIÓN.
+- [x] Si audiencia y descripción son inválidas, el primer control de PARA recibe foco después de intentar publicar.
+- [x] Si únicamente la descripción es inválida, el textarea recibe foco después de intentar publicar.
+- [x] Después del primer intento, cada error desaparece cuando su campo corregido pasa a ser válido.
+- [x] Cambiar de tipo no introduce errores porque siempre existe exactamente una selección.
+- [x] Cancelar cierra el modal, conserva audiencia, tipo y descripción, limpia los errores y devuelve el foco al disparador utilizado.
+- [x] Reabrir después de cancelar recupera el borrador conservado sin mostrar errores anteriores.
+- [x] Presionar Escape no cierra el modal ni modifica el borrador.
+- [x] Hacer clic directamente sobre el fondo no cierra el modal ni modifica el borrador.
+- [x] Hacer clic dentro de la tarjeta no cierra el modal salvo que se active Cancelar o se complete una publicación válida.
+- [x] Publicar un formulario válido cierra el modal, restaura el foco y reinicia el formulario.
+- [x] Reabrir después de una publicación válida muestra audiencia vacía, Actividad seleccionada y el texto inicial de referencia.
+- [x] Una publicación válida no agrega tarjetas, no cambia contadores, no modifica fixtures y no produce solicitudes de red.
+- [x] Después de una publicación válida no aparece un aviso de confirmación.
+- [x] `ModalDialog` permite bloquear Escape y fondo para Nueva publicación sin duplicar el comportamiento base del diálogo.
+- [x] Agregar niño y Vincular padre conservan sus mecanismos de cierre, restauración de foco y demás comportamientos aprobados.
+- [x] A 390 x 844, la tarjeta mantiene márgenes respecto del viewport, permite desplazar su contenido y no presenta scroll horizontal ni controles recortados.
+- [x] El modal aparece por encima de la cabecera, el sidebar y la navegación móvil.
+- [x] La animación de apertura se desactiva o reduce cuando el sistema solicita movimiento reducido.
+- [x] La paleta permanece fiel a las referencias independientemente de la preferencia de tema del sistema.
+- [x] La consola del navegador no muestra errores ni advertencias producidos al abrir, seleccionar, validar, publicar o cancelar.
+- [x] `npm run lint -- app components data types lib` finaliza correctamente.
+- [x] `npx tsc --noEmit` finaliza correctamente.
+- [x] `npm run build` finaliza correctamente.
+- [x] `package.json` y `package-lock.json` no incorporan nuevas dependencias.
 
 ## Decisiones
 

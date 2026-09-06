@@ -10,7 +10,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Repository
 
-- This is one npm package using Next.js 16.3.4 App Router. Application code starts in `app/`; there is no `src/`, backend, database, or test suite yet.
+- This is one npm package using Next.js 16.3.4 App Router. Application code starts in `app/`; there is no `src/`, application backend, Supabase client integration, or test suite yet.
 - `referencias/pantallas/index.dc.html` indexes the linked product prototypes; `referencias/screenshots/` contains additional visual references. The `.dc.html` files are design inputs, not Next.js routes: implement application behavior under `app/`.
 - `referencias/pantallas/support.js` is generated reference-preview code. Do not edit it; its stated source directory, `dc-runtime/`, is not part of this repository.
 
@@ -34,12 +34,27 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - Playwright: screenshots and any Playwright output go in `.playwright-mcp/` (gitignored).
 - Context7: use it to fetch current framework docs instead of relying on training data.
+- Supabase MCP is connected to the target hosted project. Use it to inspect the database, apply migrations, generate types, review advisors, and work with Storage or Edge Functions.
 
-## Spec Driven Development - Skills
+## Supabase
 
-- /spec Usaremos esta habilidad para crear las especificaciones.
-- /spec-impl Usaremos esta skill para hacer las implementaciones
-.
-## Reglas de código
+- The intended database model is documented in the `docs` project reference at `../07-DB-Schema/opendaycare-database-schema.md`. Treat it as the design source, not proof that the schema has been deployed.
+- The connected project currently has no `public` tables, migrations, Storage buckets, or Edge Functions. Inspect the remote project before assuming this remains true.
+- No Supabase JavaScript packages or local `supabase/` CLI project are installed yet. Keep `package-lock.json` authoritative when adding packages and pin their versions.
+- `.env.template` documents `SUPABASE_DB_PASSWORD`. Put real credentials only in ignored local environment files; never commit passwords, secret keys, or `service_role` credentials, and never expose them through `NEXT_PUBLIC_*` variables.
+- Persist database identifiers, enum values, tags, and codes in English; translate user-facing labels in the UI. The planned schema uses UUID primary keys and `timestamptz` audit fields.
+- Supabase Auth owns credentials in `auth.users`; application profile data belongs in `public.users`. Never duplicate email or password hashes in the domain schema.
+- Enable RLS on every table in exposed schemas, including `public`, and write policies for the actual ownership and role model. Never use user-editable `user_metadata` for authorization decisions.
+- Use `supabase_apply_migration` for DDL, `supabase_execute_sql` for non-DDL queries, and run Supabase security and performance advisors after schema changes. Do not hardcode generated IDs in data migrations.
+- Search current Supabase documentation before implementation or debugging; do not rely on model memory for APIs, CLI flags, authentication, or RLS behavior.
 
-- Usar código limpio, nombres, funciones, variables, etc. en inglés.
+## Skills
+
+- `/spec`: load `spec` to create or refine feature and screen specifications before implementing large work.
+- `/spec-impl`: load `spec-impl` only for an approved specification; it manages the implementation branch and staged review workflow.
+- `supabase`: load for every task involving Supabase Database, Auth, Storage, Realtime, Edge Functions, client libraries, CLI, MCP, logs, or troubleshooting.
+- `supabase-postgres-best-practices`: load before writing or changing SQL, tables, columns, indexes, migrations, RLS policies, triggers, database functions, or when diagnosing Postgres performance and concurrency issues. For database work, load it together with `supabase`.
+
+## Code Rules
+
+- Use clean code and English names for functions, variables, types, database objects, and persisted values.
