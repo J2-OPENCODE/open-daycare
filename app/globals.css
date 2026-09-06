@@ -27,6 +27,10 @@
   --activity-strong: #2e89a6;
   --announcement-soft: #ccd8f4;
   --announcement-strong: #4e72c8;
+  --meal-soft: #f7e7a6;
+  --meal-strong: #9a7b1e;
+  --nap-soft: #e7dcf6;
+  --nap-strong: #7b5fc0;
   --photo-background: #f4ece1;
   --photo-border: #dbcdba;
   --photo-foreground: #b0a290;
@@ -97,6 +101,10 @@
   --color-activity-strong: var(--activity-strong);
   --color-announcement-soft: var(--announcement-soft);
   --color-announcement-strong: var(--announcement-strong);
+  --color-meal-soft: var(--meal-soft);
+  --color-meal-strong: var(--meal-strong);
+  --color-nap-soft: var(--nap-soft);
+  --color-nap-strong: var(--nap-strong);
   --color-photo-background: var(--photo-background);
   --color-photo-border: var(--photo-border);
   --color-photo-foreground: var(--photo-foreground);

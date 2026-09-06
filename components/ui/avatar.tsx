@@ -1,7 +1,14 @@
 import { MegaphoneIcon } from "@/components/icons";
 import type { IconAvatar, InitialsAvatar } from "@/types/avatar";
 
-type AvatarSize = "sm" | "md" | "lg" | "xl" | "activation" | "profile";
+type AvatarSize =
+  | "chip"
+  | "sm"
+  | "md"
+  | "lg"
+  | "xl"
+  | "activation"
+  | "profile";
 
 type AvatarProps = {
   avatar: InitialsAvatar | IconAvatar;
@@ -9,6 +16,7 @@ type AvatarProps = {
 };
 
 const sizeClasses: Record<AvatarSize, string> = {
+  chip: "h-[26px] w-[26px] text-[13px]",
   sm: "h-[38px] w-[38px] text-base",
   md: "h-10 w-10 text-base",
   lg: "h-11 w-11 text-[17px]",
