@@ -1,5 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "lsp": true,
   "command": {
     "spec": {
       "description": "Crea especificaciones de pantallas y funcionalidades",
@@ -16,6 +17,12 @@
       "type": "local",
       "command": ["npx", "-y", "@playwright/mcp@latest"],
       "enabled": true
+    }
+  },
+  "references": {
+    "docs": {
+      "path": "../07-DB-Schema",
+      "description": "este es un esquema a la base de datos"
     }
   }
 }
