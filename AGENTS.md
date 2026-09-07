@@ -10,13 +10,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Repository
 
-- This is one npm package using Next.js 16.3.4 App Router. Application code starts in `app/`; there is no `src/`, application backend, Supabase client integration, or test suite yet.
+- This is one npm package using Next.js 16.3.4 App Router with Supabase SSR integration. Application code starts in `app/`; there is no `src/`, separate application backend, or test suite yet.
 - `referencias/pantallas/index.dc.html` indexes the linked product prototypes; `referencias/screenshots/` contains additional visual references. The `.dc.html` files are design inputs, not Next.js routes: implement application behavior under `app/`.
 - `referencias/pantallas/support.js` is generated reference-preview code. Do not edit it; its stated source directory, `dc-runtime/`, is not part of this repository.
 
 ## Toolchain
 
-- Use npm and keep `package-lock.json` authoritative. Next.js requires Node.js 20.9 or newer.
+- Use npm and keep `package-lock.json` authoritative. The installed Supabase libraries require Node.js 22 or newer.
 - Tailwind CSS is v4 and is loaded with `@import "tailwindcss"` in `app/globals.css` through `@tailwindcss/postcss`; there is intentionally no `tailwind.config.*`.
 - TypeScript is strict and maps `@/*` to the repository root. Next.js-generated types live in `.next/types` and `.next/dev/types`; do not edit them or the ignored `next-env.d.ts`.
 
@@ -40,8 +40,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - The intended database model is documented in the `docs` project reference at `../07-DB-Schema/opendaycare-database-schema.md`. Treat it as the design source, not proof that the schema has been deployed.
 - The connected project currently has no `public` tables, migrations, Storage buckets, or Edge Functions. Inspect the remote project before assuming this remains true.
-- No Supabase JavaScript packages or local `supabase/` CLI project are installed yet. Keep `package-lock.json` authoritative when adding packages and pin their versions.
-- `.env.template` documents `SUPABASE_DB_PASSWORD`. Put real credentials only in ignored local environment files; never commit passwords, secret keys, or `service_role` credentials, and never expose them through `NEXT_PUBLIC_*` variables.
+- The Next.js application uses the pinned `@supabase/supabase-js` and `@supabase/ssr` packages. Browser and server client factories live in `utils/supabase/client.ts` and `utils/supabase/server.ts`.
+- Session cookies are refreshed by `utils/supabase/middleware.ts` through the Next.js 16 request entry point in the root `proxy.ts`. Keep the auth validation call and refreshed response cookies/cache-safety headers intact.
+- Supabase clients use `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; local values belong in ignored environment files. `.env.template` also documents `SUPABASE_DB_PASSWORD`. Never commit passwords, secret keys, or `service_role` credentials, and never expose them through `NEXT_PUBLIC_*` variables.
+- No local `supabase/` CLI project is installed yet. Keep `package-lock.json` authoritative when changing packages and pin their versions.
 - Persist database identifiers, enum values, tags, and codes in English; translate user-facing labels in the UI. The planned schema uses UUID primary keys and `timestamptz` audit fields.
 - Supabase Auth owns credentials in `auth.users`; application profile data belongs in `public.users`. Never duplicate email or password hashes in the domain schema.
 - Enable RLS on every table in exposed schemas, including `public`, and write policies for the actual ownership and role model. Never use user-editable `user_metadata` for authorization decisions.
