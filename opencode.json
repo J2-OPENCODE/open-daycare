@@ -20,7 +20,7 @@
     }
   },
   "references": {
-    "docs": {
+    "db-schema": {
       "path": "../07-DB-Schema",
       "description": "este es un esquema a la base de datos"
     }
