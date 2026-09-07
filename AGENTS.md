@@ -52,6 +52,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - `/spec`: load `spec` to create or refine feature and screen specifications before implementing large work.
 - `/spec-impl`: load `spec-impl` only for an approved specification; it manages the implementation branch and staged review workflow.
+- Store every database-related specification under `spec/database/`.
 - `supabase`: load for every task involving Supabase Database, Auth, Storage, Realtime, Edge Functions, client libraries, CLI, MCP, logs, or troubleshooting.
 - `supabase-postgres-best-practices`: load before writing or changing SQL, tables, columns, indexes, migrations, RLS policies, triggers, database functions, or when diagnosing Postgres performance and concurrency issues. For database work, load it together with `supabase`.
 
