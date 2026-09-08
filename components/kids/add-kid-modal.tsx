@@ -2,18 +2,22 @@
 
 import { ChevronDownIcon } from "@/components/icons";
 import {
-  ADD_KID_ROOM_OPTIONS,
   INITIAL_ADD_KID_FORM_VALUES,
+  MAX_KID_FULL_NAME_LENGTH,
+  MAX_KID_MEDICAL_NOTES_LENGTH,
   maskBirthDate,
+  validateAddKidFormValues,
+  validateAllergies,
   validateBirthDate,
   validateFullName,
-  validateRoom,
+  validateMedicalNotes,
+  validateRoomId,
   type AddKidFormErrors,
   type AddKidFormValues,
-  type AddKidRoom,
-  type RequiredAddKidField,
+  type AddKidRoomOption,
 } from "@/lib/add-kid-form";
 import { ModalDialog } from "@/components/ui/modal-dialog";
+import type { AddKidActionResult, AddKidField } from "@/types/kids";
 import {
   useEffect,
   useRef,
@@ -25,9 +29,19 @@ const labelClassName =
   "mb-2 block text-xs font-extrabold tracking-[0.7px] text-muted-strong";
 const fieldClassName =
   "block w-full rounded-[14px] border-[1.5px] border-modal-field-border bg-modal-field px-4 py-[13px] text-[15px] text-foreground outline-none transition-[border-color,box-shadow] placeholder:text-auth-placeholder focus:border-coral focus:ring-[3px] focus:ring-[var(--modal-focus-ring)]";
+const fieldOrder = [
+  "fullName",
+  "birthDate",
+  "roomId",
+  "allergies",
+  "medicalNotes",
+] as const satisfies readonly AddKidField[];
 
 type AddKidModalProps = {
   isOpen: boolean;
+  isPending: boolean;
+  result: AddKidActionResult | null;
+  rooms: readonly AddKidRoomOption[];
   onClose: () => void;
   onAfterClose: () => void;
   onSubmit: (values: AddKidFormValues) => void;
@@ -35,6 +49,9 @@ type AddKidModalProps = {
 
 export function AddKidModal({
   isOpen,
+  isPending,
+  result,
+  rooms,
   onClose,
   onAfterClose,
   onSubmit,
@@ -45,7 +62,30 @@ export function AddKidModal({
   const fullNameRef = useRef<HTMLInputElement>(null);
   const birthDateRef = useRef<HTMLInputElement>(null);
   const roomRef = useRef<HTMLSelectElement>(null);
-  const pendingFocusRef = useRef<RequiredAddKidField>(null);
+  const allergiesRef = useRef<HTMLInputElement>(null);
+  const medicalNotesRef = useRef<HTMLTextAreaElement>(null);
+  const pendingFocusRef = useRef<AddKidField>(null);
+  const displayedErrors = result?.status === "invalid" ? result.errors : errors;
+
+  useEffect(() => {
+    if (!isOpen || result?.status !== "invalid") {
+      return;
+    }
+
+    const field = fieldOrder.find((candidate) => result.errors[candidate]);
+
+    if (field === "fullName") {
+      fullNameRef.current?.focus();
+    } else if (field === "birthDate") {
+      birthDateRef.current?.focus();
+    } else if (field === "roomId") {
+      roomRef.current?.focus();
+    } else if (field === "allergies") {
+      allergiesRef.current?.focus();
+    } else if (field === "medicalNotes") {
+      medicalNotesRef.current?.focus();
+    }
+  }, [isOpen, result]);
 
   useEffect(() => {
     const field = pendingFocusRef.current;
@@ -58,8 +98,12 @@ export function AddKidModal({
       fullNameRef.current?.focus();
     } else if (field === "birthDate") {
       birthDateRef.current?.focus();
-    } else {
+    } else if (field === "roomId") {
       roomRef.current?.focus();
+    } else if (field === "allergies") {
+      allergiesRef.current?.focus();
+    } else {
+      medicalNotesRef.current?.focus();
     }
 
     pendingFocusRef.current = null;
@@ -73,14 +117,20 @@ export function AddKidModal({
   }
 
   function requestClose() {
+    if (isPending) {
+      return;
+    }
+
     resetForm();
     onClose();
   }
 
-  function revalidateField(
-    field: RequiredAddKidField,
-    error: string | undefined,
-  ) {
+  function handleAfterClose() {
+    resetForm();
+    onAfterClose();
+  }
+
+  function revalidateField(field: AddKidField, error: string | undefined) {
     if (!hasAttemptedSubmit) {
       return;
     }
@@ -100,59 +150,47 @@ export function AddKidModal({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setHasAttemptedSubmit(true);
 
-    const nextErrors: AddKidFormErrors = {};
-    const fullNameError = validateFullName(values.fullName);
-    const birthDateError = validateBirthDate(values.birthDate, new Date());
-    const roomError = validateRoom(values.room);
-
-    if (fullNameError) {
-      nextErrors.fullName = fullNameError;
-    }
-
-    if (birthDateError) {
-      nextErrors.birthDate = birthDateError;
-    }
-
-    if (roomError) {
-      nextErrors.room = roomError;
-    }
-
-    setErrors(nextErrors);
-
-    if (Object.keys(nextErrors).length === 0) {
-      onSubmit(values);
-      resetForm();
+    if (isPending) {
       return;
     }
 
-    pendingFocusRef.current = nextErrors.fullName
-      ? "fullName"
-      : nextErrors.birthDate
-        ? "birthDate"
-        : "room";
+    setHasAttemptedSubmit(true);
+    const validation = validateAddKidFormValues(values, new Date());
+
+    if (validation.status === "valid") {
+      setErrors({});
+      onSubmit(values);
+      return;
+    }
+
+    pendingFocusRef.current =
+      fieldOrder.find((field) => validation.errors[field]) ?? null;
+    setErrors(validation.errors);
   }
 
   return (
     <ModalDialog
       isOpen={isOpen}
       onClose={requestClose}
-      onAfterClose={onAfterClose}
+      onAfterClose={handleAfterClose}
       ariaLabelledBy="add-kid-modal-title"
       initialFocusRef={fullNameRef}
+      dismissible={!isPending}
       className="fixed inset-0 m-auto max-h-[calc(100dvh_-_2rem)] w-[calc(100%_-_2rem)] max-w-[520px] overflow-visible border-0 bg-transparent p-0 text-foreground"
     >
       <form
         className="modal-dialog-panel flex max-h-[calc(100dvh_-_2rem)] flex-col overflow-hidden rounded-[24px] border border-border bg-modal-card shadow-[var(--modal-shadow)]"
         noValidate
         onSubmit={handleSubmit}
+        aria-busy={isPending}
       >
         <header className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-center border-b border-border px-5 py-5 md:px-[26px]">
           <button
             type="button"
-            className="w-fit rounded-md text-[15px] font-bold text-muted-strong outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-coral-strong focus-visible:ring-offset-2 focus-visible:ring-offset-modal-card"
+            className="w-fit rounded-md text-[15px] font-bold text-muted-strong outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-coral-strong focus-visible:ring-offset-2 focus-visible:ring-offset-modal-card disabled:cursor-not-allowed disabled:opacity-50"
             onClick={requestClose}
+            disabled={isPending}
           >
             Cancelar
           </button>
@@ -164,24 +202,38 @@ export function AddKidModal({
           </h2>
           <button
             type="submit"
-            className="justify-self-end rounded-md text-[15px] font-extrabold text-coral-heading outline-none transition-colors hover:text-coral-dark focus-visible:ring-2 focus-visible:ring-coral-strong focus-visible:ring-offset-2 focus-visible:ring-offset-modal-card"
+            className="justify-self-end rounded-md text-[15px] font-extrabold text-coral-heading outline-none transition-colors hover:text-coral-dark focus-visible:ring-2 focus-visible:ring-coral-strong focus-visible:ring-offset-2 focus-visible:ring-offset-modal-card disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isPending}
           >
-            Guardar
+            {isPending ? "Guardando…" : "Guardar"}
           </button>
         </header>
 
         <div className="min-h-0 overflow-y-auto px-5 py-6 md:px-[26px]">
+          {result?.status === "error" ? (
+            <p
+              className="mb-[18px] rounded-xl bg-[#FFF0EB] px-4 py-3 text-sm font-semibold text-[#9B3F30]"
+              role="alert"
+            >
+              {result.message}
+            </p>
+          ) : null}
+
           <div className="mb-[18px]">
             <label htmlFor="add-kid-full-name" className={labelClassName}>
-              NOMBRE COMPLETO <span aria-hidden="true">*</span>
+              NOMBRE COMPLETO <span aria-hidden="true">*</span>{" "}
+              <span className="font-bold normal-case">
+                (máx. {MAX_KID_FULL_NAME_LENGTH})
+              </span>
             </label>
             <input
               ref={fullNameRef}
               id="add-kid-full-name"
               name="fullName"
               type="text"
+              maxLength={MAX_KID_FULL_NAME_LENGTH}
               placeholder="Ej. Martina López"
-              className={`${fieldClassName} ${errors.fullName ? "border-modal-error focus:border-modal-error focus:ring-modal-error/15" : ""}`}
+              className={`${fieldClassName} ${displayedErrors.fullName ? "border-modal-error focus:border-modal-error focus:ring-modal-error/15" : ""}`}
               value={values.fullName}
               onChange={(event) => {
                 const fullName = event.currentTarget.value;
@@ -191,18 +243,20 @@ export function AddKidModal({
                 }));
                 revalidateField("fullName", validateFullName(fullName));
               }}
-              aria-invalid={Boolean(errors.fullName)}
+              aria-invalid={Boolean(displayedErrors.fullName)}
               aria-describedby={
-                errors.fullName ? "add-kid-full-name-error" : undefined
+                displayedErrors.fullName
+                  ? "add-kid-full-name-error"
+                  : undefined
               }
               required
             />
-            {errors.fullName ? (
+            {displayedErrors.fullName ? (
               <p
                 id="add-kid-full-name-error"
                 className="mt-1.5 text-[13px] font-semibold text-modal-error"
               >
-                {errors.fullName}
+                {displayedErrors.fullName}
               </p>
             ) : null}
           </div>
@@ -220,7 +274,7 @@ export function AddKidModal({
                 inputMode="numeric"
                 maxLength={10}
                 placeholder="dd/mm/aaaa"
-                className={`${fieldClassName} ${errors.birthDate ? "border-modal-error focus:border-modal-error focus:ring-modal-error/15" : ""}`}
+                className={`${fieldClassName} ${displayedErrors.birthDate ? "border-modal-error focus:border-modal-error focus:ring-modal-error/15" : ""}`}
                 value={values.birthDate}
                 onChange={(event) => {
                   const birthDate = maskBirthDate(event.currentTarget.value);
@@ -233,18 +287,20 @@ export function AddKidModal({
                     validateBirthDate(birthDate, new Date()),
                   );
                 }}
-                aria-invalid={Boolean(errors.birthDate)}
+                aria-invalid={Boolean(displayedErrors.birthDate)}
                 aria-describedby={
-                  errors.birthDate ? "add-kid-birth-date-error" : undefined
+                  displayedErrors.birthDate
+                    ? "add-kid-birth-date-error"
+                    : undefined
                 }
                 required
               />
-              {errors.birthDate ? (
+              {displayedErrors.birthDate ? (
                 <p
                   id="add-kid-birth-date-error"
                   className="mt-1.5 text-[13px] font-semibold text-modal-error"
                 >
-                  {errors.birthDate}
+                  {displayedErrors.birthDate}
                 </p>
               ) : null}
             </div>
@@ -257,29 +313,31 @@ export function AddKidModal({
                 <select
                   ref={roomRef}
                   id="add-kid-room"
-                  name="room"
-                  className={`${fieldClassName} appearance-none pr-11 font-bold ${errors.room ? "border-modal-error focus:border-modal-error focus:ring-modal-error/15" : ""}`}
-                  value={values.room}
+                  name="roomId"
+                  className={`${fieldClassName} appearance-none pr-11 font-bold ${displayedErrors.roomId ? "border-modal-error focus:border-modal-error focus:ring-modal-error/15" : ""}`}
+                  value={values.roomId}
                   onChange={(event) => {
-                    const room = event.currentTarget.value as AddKidRoom;
+                    const roomId = event.currentTarget.value;
                     setValues((currentValues) => ({
                       ...currentValues,
-                      room,
+                      roomId,
                     }));
-                    revalidateField("room", validateRoom(room));
+                    revalidateField("roomId", validateRoomId(roomId));
                   }}
-                  aria-invalid={Boolean(errors.room)}
+                  aria-invalid={Boolean(displayedErrors.roomId)}
                   aria-describedby={
-                    errors.room ? "add-kid-room-error" : undefined
+                    displayedErrors.roomId
+                      ? "add-kid-room-error"
+                      : undefined
                   }
                   required
                 >
                   <option value="" disabled>
                     Seleccioná una sala
                   </option>
-                  {ADD_KID_ROOM_OPTIONS.map((room) => (
-                    <option key={room} value={room}>
-                      {room}
+                  {rooms.map((room) => (
+                    <option key={room.id} value={room.id}>
+                      {room.label}
                     </option>
                   ))}
                 </select>
@@ -288,12 +346,12 @@ export function AddKidModal({
                   size={16}
                 />
               </div>
-              {errors.room ? (
+              {displayedErrors.roomId ? (
                 <p
                   id="add-kid-room-error"
                   className="mt-1.5 text-[13px] font-semibold text-modal-error"
                 >
-                  {errors.room}
+                  {displayedErrors.roomId}
                 </p>
               ) : null}
             </div>
@@ -304,11 +362,12 @@ export function AddKidModal({
               ALERGIAS <span className="font-bold normal-case">(opcional)</span>
             </label>
             <input
+              ref={allergiesRef}
               id="add-kid-allergies"
               name="allergies"
               type="text"
               placeholder="Ej. Maní, Lactosa"
-              className={fieldClassName}
+              className={`${fieldClassName} ${displayedErrors.allergies ? "border-modal-error focus:border-modal-error focus:ring-modal-error/15" : ""}`}
               value={values.allergies}
               onChange={(event) => {
                 const allergies = event.currentTarget.value;
@@ -316,20 +375,39 @@ export function AddKidModal({
                   ...currentValues,
                   allergies,
                 }));
+                revalidateField("allergies", validateAllergies(allergies));
               }}
+              aria-invalid={Boolean(displayedErrors.allergies)}
+              aria-describedby={
+                displayedErrors.allergies
+                  ? "add-kid-allergies-error"
+                  : undefined
+              }
             />
+            {displayedErrors.allergies ? (
+              <p
+                id="add-kid-allergies-error"
+                className="mt-1.5 text-[13px] font-semibold text-modal-error"
+              >
+                {displayedErrors.allergies}
+              </p>
+            ) : null}
           </div>
 
           <div>
             <label htmlFor="add-kid-medical-notes" className={labelClassName}>
               NOTAS MÉDICAS{" "}
-              <span className="font-bold normal-case">(opcional)</span>
+              <span className="font-bold normal-case">
+                (opcional · máx. {MAX_KID_MEDICAL_NOTES_LENGTH})
+              </span>
             </label>
             <textarea
+              ref={medicalNotesRef}
               id="add-kid-medical-notes"
               name="medicalNotes"
+              maxLength={MAX_KID_MEDICAL_NOTES_LENGTH}
               placeholder="Indicaciones, medicación, contactos…"
-              className={`${fieldClassName} min-h-[90px] resize-y leading-normal`}
+              className={`${fieldClassName} min-h-[90px] resize-y leading-normal ${displayedErrors.medicalNotes ? "border-modal-error focus:border-modal-error focus:ring-modal-error/15" : ""}`}
               value={values.medicalNotes}
               onChange={(event) => {
                 const medicalNotes = event.currentTarget.value;
@@ -337,8 +415,26 @@ export function AddKidModal({
                   ...currentValues,
                   medicalNotes,
                 }));
+                revalidateField(
+                  "medicalNotes",
+                  validateMedicalNotes(medicalNotes),
+                );
               }}
+              aria-invalid={Boolean(displayedErrors.medicalNotes)}
+              aria-describedby={
+                displayedErrors.medicalNotes
+                  ? "add-kid-medical-notes-error"
+                  : undefined
+              }
             />
+            {displayedErrors.medicalNotes ? (
+              <p
+                id="add-kid-medical-notes-error"
+                className="mt-1.5 text-[13px] font-semibold text-modal-error"
+              >
+                {displayedErrors.medicalNotes}
+              </p>
+            ) : null}
           </div>
         </div>
       </form>

@@ -1,23 +1,22 @@
 import { KidProfile } from "@/components/kids/kid-profile";
 import { AppShell } from "@/components/layout/app-shell";
 import { feedData } from "@/data/feed";
-import { findKidById, kidsData } from "@/data/kids";
-import { requireActiveUser } from "@/lib/auth";
+import { requireKidsAdminUser } from "@/lib/auth";
+import { getActiveKidBySlug } from "@/lib/kids-data";
 import { notFound } from "next/navigation";
 
 type KidProfilePageProps = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 };
-
-export function generateStaticParams() {
-  return kidsData.children.map((kid) => ({ id: kid.id }));
-}
 
 export default async function KidProfilePage({
   params,
 }: KidProfilePageProps) {
-  const [user, { id }] = await Promise.all([requireActiveUser(), params]);
-  const kid = findKidById(id);
+  const [user, { slug }] = await Promise.all([
+    requireKidsAdminUser(),
+    params,
+  ]);
+  const kid = await getActiveKidBySlug(user.daycareId, slug);
 
   if (!kid) {
     notFound();
@@ -25,7 +24,7 @@ export default async function KidProfilePage({
 
   return (
     <AppShell
-      roomName={kidsData.roomName}
+      roomName={kid.roomName}
       currentUser={{ ...feedData.currentUser, name: user.fullName }}
       currentDestination="kids"
     >

@@ -15,7 +15,8 @@ export function KidProfileHeader({ kid }: KidProfileHeaderProps) {
           {kid.name}
         </h1>
         <p className="mt-1 text-[14px] text-muted-strong md:text-[15px]">
-          {kid.ageYears} años · Sala {kid.roomName}
+          {kid.ageYears} {kid.ageYears === 1 ? "año" : "años"} · Sala{" "}
+          {kid.roomName}
         </p>
       </div>
 
