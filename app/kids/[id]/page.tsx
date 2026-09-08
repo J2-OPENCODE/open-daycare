@@ -2,6 +2,7 @@ import { KidProfile } from "@/components/kids/kid-profile";
 import { AppShell } from "@/components/layout/app-shell";
 import { feedData } from "@/data/feed";
 import { findKidById, kidsData } from "@/data/kids";
+import { requireActiveUser } from "@/lib/auth";
 import { notFound } from "next/navigation";
 
 type KidProfilePageProps = {
@@ -15,7 +16,7 @@ export function generateStaticParams() {
 export default async function KidProfilePage({
   params,
 }: KidProfilePageProps) {
-  const { id } = await params;
+  const [user, { id }] = await Promise.all([requireActiveUser(), params]);
   const kid = findKidById(id);
 
   if (!kid) {
@@ -25,7 +26,7 @@ export default async function KidProfilePage({
   return (
     <AppShell
       roomName={kidsData.roomName}
-      currentUser={feedData.currentUser}
+      currentUser={{ ...feedData.currentUser, name: user.fullName }}
       currentDestination="kids"
     >
       <KidProfile kid={kid} />

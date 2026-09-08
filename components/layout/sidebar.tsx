@@ -2,12 +2,12 @@ import {
   BellIcon,
   ChildrenIcon,
   HomeIcon,
-  LogOutIcon,
   PlusIcon,
   SunIcon,
   UserIcon,
 } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
+import { LogoutButton } from "@/components/auth/logout-button";
 import type { FeedData } from "@/types/feed";
 import Link from "next/link";
 
@@ -145,14 +145,7 @@ export function Sidebar({
               {currentUser.role} · {currentUser.roomName}
             </p>
           </div>
-          <button
-            type="button"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-background text-muted-strong disabled:opacity-100"
-            disabled
-            aria-label="Cerrar sesión (no disponible)"
-          >
-            <LogOutIcon size={16} />
-          </button>
+          <LogoutButton variant="sidebar" />
         </div>
       </div>
     </aside>

@@ -9,6 +9,7 @@ import {
   type AppDestination,
   Brand,
 } from "@/components/layout/sidebar";
+import { LogoutButton } from "@/components/auth/logout-button";
 import Link from "next/link";
 
 type MobileNavigationProps = {
@@ -33,19 +34,22 @@ export function MobileNavigation({
     <>
       <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-surface px-4 md:hidden">
         <Brand roomName={roomName} variant="mobile" />
-        <button
-          type="button"
-          className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-xl bg-linear-to-b from-coral-start to-coral-end text-white shadow-[0_6px_14px_-7px_rgba(238,129,100,0.75)] disabled:opacity-100"
-          disabled={!onCreatePost}
-          aria-label={
-            onCreatePost
-              ? "Nueva publicación"
-              : "Nueva publicación (no disponible)"
-          }
-          onClick={onCreatePost}
-        >
-          <PlusIcon size={18} />
-        </button>
+        <div className="flex items-center gap-2">
+          <LogoutButton variant="mobile" />
+          <button
+            type="button"
+            className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-xl bg-linear-to-b from-coral-start to-coral-end text-white shadow-[0_6px_14px_-7px_rgba(238,129,100,0.75)] disabled:opacity-100"
+            disabled={!onCreatePost}
+            aria-label={
+              onCreatePost
+                ? "Nueva publicación"
+                : "Nueva publicación (no disponible)"
+            }
+            onClick={onCreatePost}
+          >
+            <PlusIcon size={18} />
+          </button>
+        </div>
       </header>
 
       <nav
