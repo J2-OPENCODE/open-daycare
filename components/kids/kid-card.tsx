@@ -18,7 +18,7 @@ function getParentsLabel(parentCount: number) {
 export function KidCard({ kid }: KidCardProps) {
   return (
     <Link
-      href={`/kids/${kid.id}`}
+      href={`/kids/${kid.slug}`}
       className="flex min-w-0 items-center gap-3.5 rounded-[18px] border border-border bg-surface p-4 shadow-[0_4px_14px_-12px_rgba(120,90,60,0.5)] transition-[border-color,transform] hover:-translate-y-0.5 hover:border-[#F2A78E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-strong"
     >
       <Avatar avatar={kid.avatar} size="xl" />
@@ -28,7 +28,8 @@ export function KidCard({ kid }: KidCardProps) {
           {kid.name}
         </span>
         <span className="block text-[13px] leading-[1.35] text-muted">
-          {kid.ageYears} años · {getParentsLabel(kid.parents.length)}
+          {kid.ageYears} {kid.ageYears === 1 ? "año" : "años"} ·{" "}
+          {getParentsLabel(kid.parents.length)}
         </span>
       </span>
 

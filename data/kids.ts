@@ -5,6 +5,7 @@ export const kidsData = {
   children: [
     {
       id: "mateo-fernandez",
+      slug: "mateo-fernandez",
       name: "Mateo Fernández",
       ageYears: 3,
       birthDateLabel: "12 mar 2022",
@@ -50,6 +51,7 @@ export const kidsData = {
     },
     {
       id: "sofia-mendez",
+      slug: "sofia-mendez",
       name: "Sofía Méndez",
       ageYears: 2,
       birthDateLabel: "8 nov 2022",
@@ -83,6 +85,7 @@ export const kidsData = {
     },
     {
       id: "benjamin-ruiz",
+      slug: "benjamin-ruiz",
       name: "Benjamín Ruiz",
       ageYears: 3,
       birthDateLabel: "21 ene 2022",
@@ -128,6 +131,7 @@ export const kidsData = {
     },
     {
       id: "valentina-soto",
+      slug: "valentina-soto",
       name: "Valentina Soto",
       ageYears: 2,
       birthDateLabel: "30 sep 2022",
@@ -148,6 +152,7 @@ export const kidsData = {
     },
     {
       id: "tomas-diaz",
+      slug: "tomas-diaz",
       name: "Tomás Díaz",
       ageYears: 3,
       birthDateLabel: "5 may 2022",
@@ -181,6 +186,7 @@ export const kidsData = {
     },
     {
       id: "emma-castro",
+      slug: "emma-castro",
       name: "Emma Castro",
       ageYears: 2,
       birthDateLabel: "14 dic 2022",
@@ -214,6 +220,7 @@ export const kidsData = {
     },
     {
       id: "lucas-romero",
+      slug: "lucas-romero",
       name: "Lucas Romero",
       ageYears: 3,
       birthDateLabel: "27 feb 2022",
@@ -247,6 +254,7 @@ export const kidsData = {
     },
     {
       id: "olivia-vega",
+      slug: "olivia-vega",
       name: "Olivia Vega",
       ageYears: 2,
       birthDateLabel: "6 ago 2022",

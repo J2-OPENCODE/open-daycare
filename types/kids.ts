@@ -21,10 +21,11 @@ export type KidMedicalNotes =
 
 export type Kid = {
   id: string;
+  slug: string;
   name: string;
-  ageYears: 2 | 3;
+  ageYears: number;
   birthDateLabel: string;
-  roomName: "Soles";
+  roomName: string;
   enrollmentLabel: string;
   avatar: InitialsAvatar;
   listBadge: KidListBadge;
@@ -33,6 +34,43 @@ export type Kid = {
 };
 
 export type KidsData = {
-  roomName: "Sala Soles";
+  roomName: string;
   children: readonly Kid[];
 };
+
+export type KidRoom = {
+  id: string;
+  name: string;
+  label: string;
+  position: number;
+  children: readonly Kid[];
+};
+
+export type KidsDirectoryData = {
+  rooms: readonly KidRoom[];
+};
+
+export type AddKidRoomOption = {
+  id: string;
+  label: string;
+};
+
+export type AddKidFormValues = {
+  fullName: string;
+  birthDate: string;
+  roomId: string;
+  allergies: string;
+  medicalNotes: string;
+};
+
+export type AddKidField =
+  | "fullName"
+  | "birthDate"
+  | "roomId"
+  | "allergies"
+  | "medicalNotes";
+
+export type AddKidActionResult =
+  | { status: "success"; slug: string }
+  | { status: "invalid"; errors: Partial<Record<AddKidField, string>> }
+  | { status: "error"; message: string };
