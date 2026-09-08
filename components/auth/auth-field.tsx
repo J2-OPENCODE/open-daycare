@@ -7,6 +7,7 @@ type AuthFieldProps = Omit<ComponentProps<"input">, "className"> & {
   label: string;
   variant?: AuthFieldVariant;
   className?: string;
+  error?: string;
 };
 
 const inputVariantClasses: Record<AuthFieldVariant, string> = {
@@ -20,8 +21,14 @@ export function AuthField({
   label,
   variant = "default",
   className = "",
+  error,
   ...inputProps
 }: AuthFieldProps) {
+  const errorId = `${id}-error`;
+  const describedBy = [inputProps["aria-describedby"], error ? errorId : null]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div className={className}>
       <label
@@ -33,8 +40,15 @@ export function AuthField({
       <input
         {...inputProps}
         id={id}
+        aria-describedby={describedBy || undefined}
+        aria-invalid={Boolean(error)}
         className={`block w-full rounded-[14px] border-[1.5px] bg-white px-4 py-[14px] text-[15px] text-foreground outline-none transition-[border-color,box-shadow] placeholder:text-auth-placeholder focus:border-coral focus:ring-[3px] focus:ring-coral/15 ${inputVariantClasses[variant]}`}
       />
+      {error ? (
+        <p id={errorId} className="mt-1.5 text-[13px] font-semibold text-[#B44735]">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

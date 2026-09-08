@@ -2,7 +2,7 @@ import type { AuthDemoData } from "@/types/auth";
 
 export const authData = {
   login: {
-    email: "caro@opendaycare.com",
+    email: "",
     passwordPlaceholder: "••••••••",
   },
   activation: {

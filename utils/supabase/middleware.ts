@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+const publicRoutes = new Set(["/login", "/activate-account"]);
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -30,7 +32,29 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getClaims();
+  const { data } = await supabase.auth.getClaims();
+
+  if (!data?.claims && !publicRoutes.has(request.nextUrl.pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "";
+
+    const redirectResponse = NextResponse.redirect(url);
+
+    supabaseResponse.cookies
+      .getAll()
+      .forEach((cookie) => redirectResponse.cookies.set(cookie));
+
+    for (const name of ["cache-control", "expires", "pragma"]) {
+      const value = supabaseResponse.headers.get(name);
+
+      if (value) {
+        redirectResponse.headers.set(name, value);
+      }
+    }
+
+    return redirectResponse;
+  }
 
   return supabaseResponse;
 }
