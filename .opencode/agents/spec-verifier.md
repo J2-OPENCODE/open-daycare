@@ -1,6 +1,6 @@
 ---
 description: Verifies, fixes, and checks acceptance criteria in project spec files after collecting evidence.
-mode: primary
+mode: subagent
 temperature: 0.1
 color: success
 permission:
