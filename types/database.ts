@@ -236,6 +236,150 @@ export type Database = {
           },
         ]
       }
+      post_children: {
+        Row: {
+          child_id: string
+          created_at: string
+          daycare_id: string
+          post_id: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          daycare_id: string
+          post_id: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          daycare_id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_children_child_daycare_fkey"
+            columns: ["child_id", "daycare_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id", "daycare_id"]
+          },
+          {
+            foreignKeyName: "post_children_post_daycare_fkey"
+            columns: ["post_id", "daycare_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id", "daycare_id"]
+          },
+        ]
+      }
+      post_photos: {
+        Row: {
+          content_type: string
+          created_at: string
+          daycare_id: string
+          height: number | null
+          id: string
+          position: number
+          post_id: string
+          size_bytes: number
+          storage_path: string
+          width: number | null
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          daycare_id: string
+          height?: number | null
+          id?: string
+          position: number
+          post_id: string
+          size_bytes: number
+          storage_path: string
+          width?: number | null
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          daycare_id?: string
+          height?: number | null
+          id?: string
+          position?: number
+          post_id?: string
+          size_bytes?: number
+          storage_path?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_photos_post_daycare_fkey"
+            columns: ["post_id", "daycare_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id", "daycare_id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          daycare_id: string
+          id: string
+          published_at: string
+          room_id: string | null
+          title: string | null
+          type: Database["public"]["Enums"]["post_type"]
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          daycare_id: string
+          id?: string
+          published_at?: string
+          room_id?: string | null
+          title?: string | null
+          type: Database["public"]["Enums"]["post_type"]
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          daycare_id?: string
+          id?: string
+          published_at?: string
+          room_id?: string | null
+          title?: string | null
+          type?: Database["public"]["Enums"]["post_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_author_daycare_fkey"
+            columns: ["author_id", "daycare_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id", "daycare_id"]
+          },
+          {
+            foreignKeyName: "posts_daycare_id_fkey"
+            columns: ["daycare_id"]
+            isOneToOne: false
+            referencedRelation: "daycares"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_room_daycare_fkey"
+            columns: ["room_id", "daycare_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id", "daycare_id"]
+          },
+        ]
+      }
       rooms: {
         Row: {
           created_at: string
