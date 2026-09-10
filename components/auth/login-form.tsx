@@ -16,9 +16,11 @@ const initialState: LoginActionState = {
 
 type LoginFormProps = {
   notice?: string;
+  /** Already validated by the page; the action validates it again. */
+  returnTo?: string | null;
 };
 
-export function LoginForm({ notice }: LoginFormProps) {
+export function LoginForm({ notice, returnTo }: LoginFormProps) {
   const [state, formAction] = useActionState(login, initialState);
 
   return (
@@ -38,6 +40,9 @@ export function LoginForm({ notice }: LoginFormProps) {
       </p>
 
       <form action={formAction} autoComplete="on" noValidate>
+        {returnTo ? (
+          <input type="hidden" name="returnTo" value={returnTo} />
+        ) : null}
         {notice || state.formError ? (
           <p
             className="mb-[18px] rounded-xl bg-[#FFF0EB] px-4 py-3 text-sm font-semibold text-[#9B3F30]"

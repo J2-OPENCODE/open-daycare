@@ -48,6 +48,8 @@ export const kidsData = {
           },
         },
       ],
+      activeParentCount: 1,
+      hasPendingInvitation: true,
     },
     {
       id: "sofia-mendez",
@@ -82,6 +84,8 @@ export const kidsData = {
           },
         },
       ],
+      activeParentCount: 1,
+      hasPendingInvitation: false,
     },
     {
       id: "benjamin-ruiz",
@@ -128,6 +132,8 @@ export const kidsData = {
           },
         },
       ],
+      activeParentCount: 2,
+      hasPendingInvitation: false,
     },
     {
       id: "valentina-soto",
@@ -149,6 +155,8 @@ export const kidsData = {
         text: "Sin alergias ni notas registradas",
       },
       parents: [],
+      activeParentCount: 0,
+      hasPendingInvitation: false,
     },
     {
       id: "tomas-diaz",
@@ -183,6 +191,8 @@ export const kidsData = {
           },
         },
       ],
+      activeParentCount: 1,
+      hasPendingInvitation: false,
     },
     {
       id: "emma-castro",
@@ -217,6 +227,8 @@ export const kidsData = {
           },
         },
       ],
+      activeParentCount: 1,
+      hasPendingInvitation: false,
     },
     {
       id: "lucas-romero",
@@ -251,6 +263,8 @@ export const kidsData = {
           },
         },
       ],
+      activeParentCount: 1,
+      hasPendingInvitation: false,
     },
     {
       id: "olivia-vega",
@@ -285,6 +299,8 @@ export const kidsData = {
           },
         },
       ],
+      activeParentCount: 1,
+      hasPendingInvitation: false,
     },
   ],
 } satisfies KidsData;

@@ -1,7 +1,16 @@
 import "server-only";
 
+import { toRelationshipLabel } from "@/lib/link-parent-form";
+import type { InitialsAvatar } from "@/types/avatar";
 import type { Tables } from "@/types/database";
-import type { Kid, KidMedicalNotes, KidRoom, KidsDirectoryData } from "@/types/kids";
+import type {
+  Kid,
+  KidListBadge,
+  KidMedicalNotes,
+  KidParent,
+  KidRoom,
+  KidsDirectoryData,
+} from "@/types/kids";
 import { createClient } from "@/utils/supabase/server";
 
 const MONTH_LABELS = [
@@ -46,6 +55,36 @@ type ChildRow = Pick<
 >;
 
 type RoomRow = Pick<Tables<"rooms">, "id" | "name" | "position">;
+
+type ParentLinkRow = Pick<
+  Tables<"parent_children">,
+  "child_id" | "parent_id" | "relationship"
+>;
+
+type ParentUserRow = Pick<Tables<"users">, "id" | "full_name">;
+
+type PendingInvitationRow = Pick<
+  Tables<"invitations">,
+  "id" | "child_id" | "full_name" | "relationship"
+>;
+
+/** Presentation-only view of a child's parents. */
+type ChildParents = {
+  parents: readonly KidParent[];
+  activeParentCount: number;
+  hasPendingInvitation: boolean;
+};
+
+const NO_PARENTS: ChildParents = {
+  parents: [],
+  activeParentCount: 0,
+  hasPendingInvitation: false,
+};
+
+/** Only rows with a confirmed send are visible, so an indeterminate delivery never appears. */
+const PENDING_INVITATION_COLUMNS = "id, child_id, full_name, relationship";
+const PARENT_LINK_COLUMNS = "child_id, parent_id, relationship";
+const PARENT_USER_COLUMNS = "id, full_name";
 
 type CalendarDate = {
   year: number;
@@ -112,6 +151,105 @@ function calculateAgeYears(birthDate: CalendarDate, today: Date) {
   return Math.max(0, age);
 }
 
+function createInitialsAvatar(id: string, name: string): InitialsAvatar {
+  return {
+    kind: "initials",
+    initials: Array.from(name.trim())[0]?.toLocaleUpperCase("es") ?? "N",
+    ...AVATAR_PALETTE[getAvatarPaletteIndex(id)],
+  };
+}
+
+/**
+ * Groups links and pending invitations by child in memory, so the directory
+ * never issues a query per child.
+ */
+function mapParentsByChild(
+  links: readonly ParentLinkRow[],
+  parentUsers: readonly ParentUserRow[],
+  invitations: readonly PendingInvitationRow[],
+) {
+  const nameByParentId = new Map(
+    parentUsers.map((parent) => [parent.id, parent.full_name]),
+  );
+  const parentsByChild = new Map<string, KidParent[]>();
+  const activeCountByChild = new Map<string, number>();
+  const pendingByChild = new Set<string>();
+
+  function append(childId: string, parent: KidParent) {
+    const current = parentsByChild.get(childId);
+
+    if (current) {
+      current.push(parent);
+      return;
+    }
+
+    parentsByChild.set(childId, [parent]);
+  }
+
+  for (const link of links) {
+    // An active parent always uses the canonical name from `public.users`.
+    const name = nameByParentId.get(link.parent_id);
+
+    if (!name) {
+      continue;
+    }
+
+    append(link.child_id, {
+      id: link.parent_id,
+      name,
+      relationship: toRelationshipLabel(link.relationship),
+      status: "active",
+      avatar: createInitialsAvatar(link.parent_id, name),
+    });
+    activeCountByChild.set(
+      link.child_id,
+      (activeCountByChild.get(link.child_id) ?? 0) + 1,
+    );
+  }
+
+  for (const invitation of invitations) {
+    // A pending parent uses the name captured by the invitation.
+    append(invitation.child_id, {
+      id: invitation.id,
+      name: invitation.full_name,
+      relationship: toRelationshipLabel(invitation.relationship),
+      status: "pending",
+      avatar: createInitialsAvatar(invitation.id, invitation.full_name),
+    });
+    pendingByChild.add(invitation.child_id);
+  }
+
+  const byChild = new Map<string, ChildParents>();
+
+  for (const [childId, parents] of parentsByChild) {
+    byChild.set(childId, {
+      parents,
+      activeParentCount: activeCountByChild.get(childId) ?? 0,
+      hasPendingInvitation: pendingByChild.has(childId),
+    });
+  }
+
+  return byChild;
+}
+
+/** A medical badge always wins; otherwise a pending invitation outranks the link prompt. */
+function getListBadge(
+  allergies: readonly string[],
+  childParents: ChildParents,
+): KidListBadge {
+  if (allergies[0]) {
+    return { kind: "medical", label: allergies[0].toLocaleUpperCase("es") };
+  }
+
+  if (childParents.hasPendingInvitation) {
+    return { kind: "pending", label: "PENDIENTE" };
+  }
+
+  return childParents.activeParentCount === 0
+    ? { kind: "link", label: "VINCULAR" }
+    : null;
+}
+
 function getAvatarPaletteIndex(id: string) {
   let hash = 0;
 
@@ -148,11 +286,11 @@ function mapKid(
   child: ReturnType<typeof mapChildSource>,
   roomName: string,
   today: Date,
+  childParents: ChildParents,
 ): Kid {
   const birthDate = parseCalendarDate(child.birthDate);
   const enrollmentDate = parseCalendarDate(child.enrollmentDate);
   const allergies = getTranslatedAllergies(child.allergyTags);
-  const palette = AVATAR_PALETTE[getAvatarPaletteIndex(child.id)];
 
   return {
     id: child.id,
@@ -162,22 +300,19 @@ function mapKid(
     birthDateLabel: formatBirthDate(birthDate),
     roomName,
     enrollmentLabel: formatEnrollmentDate(enrollmentDate),
-    avatar: {
-      kind: "initials",
-      initials: Array.from(child.name.trim())[0]?.toLocaleUpperCase("es") ?? "N",
-      ...palette,
-    },
-    listBadge: allergies[0]
-      ? { kind: "medical", label: allergies[0].toLocaleUpperCase("es") }
-      : { kind: "link", label: "VINCULAR" },
+    avatar: createInitialsAvatar(child.id, child.name),
+    listBadge: getListBadge(allergies, childParents),
     medicalNotes: getMedicalNotes(allergies, child.medicalNotes),
-    parents: [],
+    parents: childParents.parents,
+    activeParentCount: childParents.activeParentCount,
+    hasPendingInvitation: childParents.hasPendingInvitation,
   };
 }
 
 function mapRoom(
   room: ReturnType<typeof mapRoomSource>,
   today: Date,
+  parentsByChild: ReadonlyMap<string, ChildParents>,
 ): KidRoom {
   const nameCollator = new Intl.Collator("es", { sensitivity: "base" });
 
@@ -187,28 +322,54 @@ function mapRoom(
     label: `Sala ${room.name}`,
     position: room.position,
     children: room.children
-      .map((child) => mapKid(child, room.name, today))
+      .map((child) =>
+        mapKid(
+          child,
+          room.name,
+          today,
+          parentsByChild.get(child.id) ?? NO_PARENTS,
+        ),
+      )
       .sort((first, second) => nameCollator.compare(first.name, second.name)),
   };
 }
 
-async function getKidsDirectorySource(daycareId: string) {
+async function getKidsDirectorySource(daycareId: string, now: Date) {
   const supabase = await createClient();
-  const [roomsResult, childrenResult] = await Promise.all([
-    supabase
-      .from("rooms")
-      .select("id, name, position")
-      .eq("daycare_id", daycareId)
-      .order("position", { ascending: true }),
-    supabase
-      .from("children")
-      .select(
-        "id, slug, full_name, birth_date, enrolled_at, room_id, allergy_tags, medical_notes",
-      )
-      .eq("daycare_id", daycareId)
-      .eq("status", "active")
-      .order("full_name", { ascending: true }),
-  ]);
+  const [roomsResult, childrenResult, linksResult, parentsResult, invitationsResult] =
+    await Promise.all([
+      supabase
+        .from("rooms")
+        .select("id, name, position")
+        .eq("daycare_id", daycareId)
+        .order("position", { ascending: true }),
+      supabase
+        .from("children")
+        .select(
+          "id, slug, full_name, birth_date, enrolled_at, room_id, allergy_tags, medical_notes",
+        )
+        .eq("daycare_id", daycareId)
+        .eq("status", "active")
+        .order("full_name", { ascending: true }),
+      supabase
+        .from("parent_children")
+        .select(PARENT_LINK_COLUMNS)
+        .eq("daycare_id", daycareId),
+      supabase
+        .from("users")
+        .select(PARENT_USER_COLUMNS)
+        .eq("daycare_id", daycareId)
+        .eq("role", "parent")
+        .eq("status", "active"),
+      supabase
+        .from("invitations")
+        .select(PENDING_INVITATION_COLUMNS)
+        .eq("daycare_id", daycareId)
+        .eq("status", "pending")
+        .not("resend_email_id", "is", null)
+        .not("sent_at", "is", null)
+        .gt("expires_at", now.toISOString()),
+    ]);
 
   if (roomsResult.error) {
     throw new Error("Unable to load daycare rooms.", {
@@ -222,9 +383,20 @@ async function getKidsDirectorySource(daycareId: string) {
     });
   }
 
+  if (linksResult.error || parentsResult.error || invitationsResult.error) {
+    throw new Error("Unable to load parents and pending invitations.", {
+      cause: linksResult.error ?? parentsResult.error ?? invitationsResult.error,
+    });
+  }
+
   return {
     rooms: roomsResult.data.map((room) =>
       mapRoomSource(room, childrenResult.data),
+    ),
+    parentsByChild: mapParentsByChild(
+      linksResult.data,
+      parentsResult.data,
+      invitationsResult.data,
     ),
   };
 }
@@ -277,14 +449,73 @@ async function getActiveKidSourceBySlug(
   };
 }
 
+async function getKidParents(
+  daycareId: string,
+  childId: string,
+  now: Date,
+): Promise<ChildParents> {
+  const supabase = await createClient();
+  const [linksResult, invitationsResult] = await Promise.all([
+    supabase
+      .from("parent_children")
+      .select(PARENT_LINK_COLUMNS)
+      .eq("daycare_id", daycareId)
+      .eq("child_id", childId),
+    supabase
+      .from("invitations")
+      .select(PENDING_INVITATION_COLUMNS)
+      .eq("daycare_id", daycareId)
+      .eq("child_id", childId)
+      .eq("status", "pending")
+      .not("resend_email_id", "is", null)
+      .not("sent_at", "is", null)
+      .gt("expires_at", now.toISOString()),
+  ]);
+
+  if (linksResult.error || invitationsResult.error) {
+    throw new Error("Unable to load the child's parents.", {
+      cause: linksResult.error ?? invitationsResult.error,
+    });
+  }
+
+  const parentIds = linksResult.data.map((link) => link.parent_id);
+  let parentUsers: ParentUserRow[] = [];
+
+  if (parentIds.length > 0) {
+    const { data, error } = await supabase
+      .from("users")
+      .select(PARENT_USER_COLUMNS)
+      .eq("daycare_id", daycareId)
+      .in("id", parentIds);
+
+    if (error) {
+      throw new Error("Unable to load the child's linked accounts.", {
+        cause: error,
+      });
+    }
+
+    parentUsers = data;
+  }
+
+  return (
+    mapParentsByChild(
+      linksResult.data,
+      parentUsers,
+      invitationsResult.data,
+    ).get(childId) ?? NO_PARENTS
+  );
+}
+
 export async function getKidsDirectoryData(
   daycareId: string,
 ): Promise<KidsDirectoryData> {
-  const source = await getKidsDirectorySource(daycareId);
   const today = new Date();
+  const source = await getKidsDirectorySource(daycareId, today);
 
   return {
-    rooms: source.rooms.map((room) => mapRoom(room, today)),
+    rooms: source.rooms.map((room) =>
+      mapRoom(room, today, source.parentsByChild),
+    ),
   };
 }
 
@@ -292,7 +523,14 @@ export async function getActiveKidBySlug(
   daycareId: string,
   slug: string,
 ): Promise<Kid | null> {
+  const today = new Date();
   const child = await getActiveKidSourceBySlug(daycareId, slug);
 
-  return child ? mapKid(child, child.roomName, new Date()) : null;
+  if (!child) {
+    return null;
+  }
+
+  const childParents = await getKidParents(daycareId, child.id, today);
+
+  return mapKid(child, child.roomName, today, childParents);
 }

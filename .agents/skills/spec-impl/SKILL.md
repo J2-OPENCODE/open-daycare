@@ -3,7 +3,7 @@ name: spec-impl
 description: Implements an approved spec. Validates that the state means "Approved" (in any language), creates a git branch named after the spec, switches to it, and starts the implementation step by step with pauses to review diffs.
 disable-model-invocation: true
 argument-hint: <NN-spec-name>
-allowed-tools: Read, Glob, Grep, Edit, Write, AskUserQuestion, Bash(git status:*), Bash(git branch:*), Bash(git checkout:*), Bash(git log:*), Bash(git diff:*), Bash(git stash:*), Bash(cat:*), Bash(ls:*)
+allowed-tools: Read, Glob, Grep, Edit, Write, AskUserQuestion, Agent, Bash(git status:*), Bash(git branch:*), Bash(git checkout:*), Bash(git log:*), Bash(git diff:*), Bash(git stash:*), Bash(cat:*), Bash(ls:*)
 ---
 
 # /spec-impl — Implementer of approved specs
@@ -205,10 +205,18 @@ Once confirmed, follow these rules during the entire implementation:
 ```
 ✅ All steps of the plan are implemented.
 
-Next step: verify the spec's acceptance criteria one by one.
-If they all pass, update the spec's state to "Implemented" (or the equivalent
-in your repo's language) and make the final commit before merging this branch.
+Next step: verify the spec's acceptance criteria one by one with the
+spec-verifier agent. Only once they all pass should the spec's state change to
+"Implemented" (or the equivalent in your repo's language), followed by the final
+commit before merging this branch.
 ```
+
+Then use `AskUserQuestion` to ask whether to run the verification now, with these two options:
+
+- **Run it now** — launch the `spec-verifier` agent, passing it the path of the spec you just implemented (`specs/NN-slug.md`) and the branch you worked on. Relay its final report to the user.
+- **Run it later** — do not launch anything. Remind the user that they can start it whenever they want with `@agent-spec-verifier specs/NN-slug.md`.
+
+Do not change the spec's state and do not commit in either case. Both remain the user's decision.
 
 ---
 
@@ -222,7 +230,7 @@ in your repo's language) and make the final commit before merging this branch.
   Phase 3  →  git checkout -b spec-01-mvp-arkanoid → git checkout spec-01-mvp-arkanoid
               Shows objective, scope, plan and criteria
   Phase 4  →  Implements step by step with pauses
-              Ends by reminding to verify the acceptance criteria
+              Ends by asking whether to run the spec-verifier agent now or later
 
 /spec-impl 02-powerups  (state: Draft / Borrador)
 

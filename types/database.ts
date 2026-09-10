@@ -95,6 +95,147 @@ export type Database = {
         }
         Relationships: []
       }
+      invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          child_id: string
+          code_digest: string
+          created_at: string
+          daycare_id: string
+          email: string
+          expires_at: string
+          failed_attempts: number
+          full_name: string
+          id: string
+          invited_by: string
+          relationship: Database["public"]["Enums"]["relationship_type"]
+          resend_email_id: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["invitation_status"]
+          token_digest: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          child_id: string
+          code_digest: string
+          created_at?: string
+          daycare_id: string
+          email: string
+          expires_at: string
+          failed_attempts?: number
+          full_name: string
+          id?: string
+          invited_by: string
+          relationship: Database["public"]["Enums"]["relationship_type"]
+          resend_email_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["invitation_status"]
+          token_digest: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          child_id?: string
+          code_digest?: string
+          created_at?: string
+          daycare_id?: string
+          email?: string
+          expires_at?: string
+          failed_attempts?: number
+          full_name?: string
+          id?: string
+          invited_by?: string
+          relationship?: Database["public"]["Enums"]["relationship_type"]
+          resend_email_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["invitation_status"]
+          token_digest?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_accepted_by_daycare_fkey"
+            columns: ["accepted_by", "daycare_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id", "daycare_id"]
+          },
+          {
+            foreignKeyName: "invitations_child_daycare_fkey"
+            columns: ["child_id", "daycare_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id", "daycare_id"]
+          },
+          {
+            foreignKeyName: "invitations_daycare_id_fkey"
+            columns: ["daycare_id"]
+            isOneToOne: false
+            referencedRelation: "daycares"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_invited_by_daycare_fkey"
+            columns: ["invited_by", "daycare_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id", "daycare_id"]
+          },
+        ]
+      }
+      parent_children: {
+        Row: {
+          child_id: string
+          created_at: string
+          daycare_id: string
+          id: string
+          parent_id: string
+          relationship: Database["public"]["Enums"]["relationship_type"]
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          daycare_id: string
+          id?: string
+          parent_id: string
+          relationship: Database["public"]["Enums"]["relationship_type"]
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          daycare_id?: string
+          id?: string
+          parent_id?: string
+          relationship?: Database["public"]["Enums"]["relationship_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_children_child_daycare_fkey"
+            columns: ["child_id", "daycare_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id", "daycare_id"]
+          },
+          {
+            foreignKeyName: "parent_children_daycare_id_fkey"
+            columns: ["daycare_id"]
+            isOneToOne: false
+            referencedRelation: "daycares"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parent_children_parent_daycare_fkey"
+            columns: ["parent_id", "daycare_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id", "daycare_id"]
+          },
+        ]
+      }
       rooms: {
         Row: {
           created_at: string
@@ -179,7 +320,48 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      accept_parent_invitation: {
+        Args: {
+          p_authenticated_email: string
+          p_invitation_id: string
+          p_parent_id: string
+        }
+        Returns: string
+      }
+      prepare_parent_signup: {
+        Args: {
+          p_auth_user_id: string
+          p_authenticated_email: string
+          p_invitation_id: string
+        }
+        Returns: undefined
+      }
+      replace_parent_invitation: {
+        Args: {
+          p_child_id: string
+          p_code_digest: string
+          p_email: string
+          p_expires_at: string
+          p_full_name: string
+          p_invited_by: string
+          p_relationship: Database["public"]["Enums"]["relationship_type"]
+          p_token_digest: string
+        }
+        Returns: string
+      }
+      verify_parent_invitation: {
+        Args: { p_code_digest: string; p_token_digest: string }
+        Returns: {
+          invitation_child_id: string
+          invitation_daycare_id: string
+          invitation_expires_at: string
+          invitation_id: string
+          invited_email: string
+          invited_full_name: string
+          invited_relationship: Database["public"]["Enums"]["relationship_type"]
+          outcome: string
+        }[]
+      }
     }
     Enums: {
       child_status: "active" | "archived"
@@ -210,12 +392,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -239,11 +421,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -264,11 +446,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -289,11 +471,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -306,11 +488,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

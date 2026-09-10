@@ -2,16 +2,20 @@ import type { InitialsAvatar } from "@/types/avatar";
 
 export type ParentStatus = "active" | "pending";
 
+/** User-facing relationship label. Persisted values stay in English. */
+export type ParentRelationshipLabel = "Mamá" | "Papá" | "Tutor/a";
+
 export type KidParent = {
   id: string;
   name: string;
-  relationship: "Mamá" | "Papá";
+  relationship: ParentRelationshipLabel;
   status: ParentStatus;
   avatar: InitialsAvatar;
 };
 
 export type KidListBadge =
   | { kind: "medical"; label: string }
+  | { kind: "pending"; label: "PENDIENTE" }
   | { kind: "link"; label: "VINCULAR" }
   | null;
 
@@ -31,6 +35,9 @@ export type Kid = {
   listBadge: KidListBadge;
   medicalNotes: KidMedicalNotes;
   parents: readonly KidParent[];
+  /** Counted from `parent_children`, never inferred from `parents.length`. */
+  activeParentCount: number;
+  hasPendingInvitation: boolean;
 };
 
 export type KidsData = {

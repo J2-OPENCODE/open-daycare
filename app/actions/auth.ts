@@ -1,5 +1,6 @@
 "use server";
 
+import { resolveActivationReturnTo } from "@/lib/invitations";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -89,10 +90,13 @@ export async function login(
   }
 
   revalidatePath("/", "layout");
-  redirect("/");
+  // Re-validated here: the hidden field is untrusted like any other input.
+  redirect(resolveActivationReturnTo(formData.get("returnTo")) ?? "/");
 }
 
-export async function logout() {
+export async function logout(formData?: FormData) {
+  // Only a canonical internal destination survives; anything else is dropped.
+  const returnTo = resolveActivationReturnTo(formData?.get("returnTo"));
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
 
@@ -107,5 +111,9 @@ export async function logout() {
   }
 
   revalidatePath("/", "layout");
-  redirect("/login");
+  redirect(
+    returnTo
+      ? `/login?returnTo=${encodeURIComponent(returnTo)}`
+      : "/login",
+  );
 }
