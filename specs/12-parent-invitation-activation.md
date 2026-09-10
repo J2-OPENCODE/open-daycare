@@ -1,6 +1,6 @@
 # SPEC 12 — Invitación y activación de cuentas parent
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 05, SPEC 10, SPEC 11
 > **Fecha:** 2026-09-09
 > **Objetivo:** Convertir la vinculación simulada en un flujo completo que envíe una invitación con Resend, active o autentique al parent, muestre el vínculo persistente y termine en una confirmación segura.
