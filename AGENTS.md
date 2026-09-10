@@ -50,11 +50,17 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Use `supabase_apply_migration` for DDL, `supabase_execute_sql` for non-DDL queries, and run Supabase security and performance advisors after schema changes. Do not hardcode generated IDs in data migrations.
 - Search current Supabase documentation before implementation or debugging; do not rely on model memory for APIs, CLI flags, authentication, or RLS behavior.
 
+## Agents
+
+- `spec-verifier`: run it after implementing a spec and before changing its status to `Implementado`. It verifies every acceptance criterion against real evidence, fixes in-scope defects, and updates the checkboxes only for criteria it could prove.
+- The agent is defined twice and both copies must be kept in sync when the workflow changes: `.claude/agents/spec-verifier.md` for Claude Code (invoke it with `@agent-spec-verifier <spec path>`) and `.opencode/agents/spec-verifier.md` for OpenCode. The frontmatter and the browser-approval mechanism differ by design; the workflow must not.
+- Browser verification is optional. In Claude Code each Playwright call raises a permission prompt in the main session, so the agent announces its browser plan first and leaves criteria that need browser evidence unchecked when a call is denied.
+
 ## Skills
 
 - `/spec`: load `spec` to create or refine feature and screen specifications before implementing large work.
 - `/spec-impl`: load `spec-impl` only for an approved specification; it manages the implementation branch and staged review workflow.
-- Store every database-related specification under `spec/database/`.
+- Store every database-related specification under `specs/database/`.
 - `supabase`: load for every task involving Supabase Database, Auth, Storage, Realtime, Edge Functions, client libraries, CLI, MCP, logs, or troubleshooting.
 - `supabase-postgres-best-practices`: load before writing or changing SQL, tables, columns, indexes, migrations, RLS policies, triggers, database functions, or when diagnosing Postgres performance and concurrency issues. For database work, load it together with `supabase`.
 
