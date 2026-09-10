@@ -472,6 +472,17 @@ export type Database = {
         }
         Returns: string
       }
+      create_post: {
+        Args: {
+          p_body: string
+          p_child_ids?: string[]
+          p_photos?: Json
+          p_post_id: string
+          p_room_id?: string
+          p_type: Database["public"]["Enums"]["post_type"]
+        }
+        Returns: string
+      }
       prepare_parent_signup: {
         Args: {
           p_auth_user_id: string

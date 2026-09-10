@@ -1,27 +1,77 @@
 "use client";
 
-import { CreatePostModal } from "@/components/feed/create-post-modal";
+import {
+  CreatePostModal,
+  type CreatePostAction,
+} from "@/components/feed/create-post-modal";
 import { FeedComposer } from "@/components/feed/feed-composer";
 import {
   FeedHeader,
   FeedSectionHeading,
 } from "@/components/feed/feed-header";
 import { FeedList } from "@/components/feed/feed-list";
+import type { PostAudienceKid } from "@/components/feed/post-audience-selector";
+import type { PostRoomOption } from "@/components/feed/post-room-selector";
 import { AppShell } from "@/components/layout/app-shell";
-import type { FeedData } from "@/types/feed";
-import type { Kid } from "@/types/kids";
-import { useState } from "react";
+import { SuccessNotice } from "@/components/ui/success-notice";
+import type { FeedData, FeedPost } from "@/types/feed";
+import { useEffect, useRef, useState } from "react";
 
 type FeedExperienceProps = {
   feed: FeedData;
-  kids: readonly Kid[];
+  posts: readonly FeedPost[];
+  kids: readonly PostAudienceKid[];
+  rooms: readonly PostRoomOption[];
+  childCount: number;
+  dateLabel: string;
+  submitAction: CreatePostAction;
 };
 
-export function FeedExperience({ feed, kids }: FeedExperienceProps) {
+const SUCCESS_NOTICE_DURATION_MS = 3000;
+
+export function FeedExperience({
+  feed,
+  posts,
+  kids,
+  rooms,
+  childCount,
+  dateLabel,
+  submitAction,
+}: FeedExperienceProps) {
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+  const [showCreatePostSuccess, setShowCreatePostSuccess] = useState(false);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
+
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current) {
+        clearTimeout(successTimerRef.current);
+      }
+    };
+  }, []);
+
+  function clearSuccessTimer() {
+    if (successTimerRef.current) {
+      clearTimeout(successTimerRef.current);
+      successTimerRef.current = null;
+    }
+  }
 
   function handleOpenCreatePost() {
+    clearSuccessTimer();
+    setShowCreatePostSuccess(false);
     setIsCreatePostOpen(true);
+  }
+
+  /** Reached only after the action confirmed the write. */
+  function handleCreatePostSuccess() {
+    setIsCreatePostOpen(false);
+    clearSuccessTimer();
+    setShowCreatePostSuccess(true);
+    successTimerRef.current = setTimeout(() => {
+      setShowCreatePostSuccess(false);
+      successTimerRef.current = null;
+    }, SUCCESS_NOTICE_DURATION_MS);
   }
 
   return (
@@ -37,8 +87,8 @@ export function FeedExperience({ feed, kids }: FeedExperienceProps) {
             nurseryLabel={feed.nurseryLabel}
             roomName={feed.roomName}
             greeting={feed.greeting}
-            childCount={feed.childCount}
-            dateLabel={feed.dateLabel}
+            childCount={childCount}
+            dateLabel={dateLabel}
           />
           <FeedComposer
             initials={feed.currentUser.initials}
@@ -46,16 +96,22 @@ export function FeedExperience({ feed, kids }: FeedExperienceProps) {
             onCreatePost={handleOpenCreatePost}
           />
           <FeedSectionHeading>{feed.sectionLabel}</FeedSectionHeading>
-          <FeedList posts={feed.posts} />
+          <FeedList posts={posts} />
         </div>
       </AppShell>
 
       <CreatePostModal
         isOpen={isCreatePostOpen}
         kids={kids}
+        rooms={rooms}
+        submitAction={submitAction}
         onClose={() => setIsCreatePostOpen(false)}
-        onSubmit={() => setIsCreatePostOpen(false)}
+        onSubmit={handleCreatePostSuccess}
       />
+
+      <SuccessNotice>
+        {showCreatePostSuccess ? "Publicación creada" : null}
+      </SuccessNotice>
     </>
   );
 }

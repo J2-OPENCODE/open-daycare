@@ -1,7 +1,8 @@
 import { CategoryBadge } from "@/components/feed/category-badge";
-import { HeartIcon, ImageIcon, MessageIcon } from "@/components/icons";
+import { HeartIcon, MessageIcon } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import type { FeedPost } from "@/types/feed";
+import Image from "next/image";
 
 type PostCardProps = {
   post: FeedPost;
@@ -31,15 +32,22 @@ export function PostCard({ post }: PostCardProps) {
       <p className="m-0 text-[15.5px] leading-[1.55] text-copy">{post.body}</p>
 
       {post.media ? (
-        <button
-          type="button"
-          className="mt-3.5 flex h-[200px] w-full flex-col items-center justify-center gap-2 rounded-2xl border-[1.5px] border-dashed border-photo-border bg-photo-background text-photo-foreground disabled:opacity-100"
-          disabled
-          aria-label={`${post.media.label} (no disponible)`}
-        >
-          <ImageIcon size={30} />
-          <span className="text-[13.5px]">{post.media.label}</span>
-        </button>
+        <figure className="relative mt-3.5 m-0 h-[200px] w-full max-w-full overflow-hidden rounded-2xl border-[1.5px] border-photo-border bg-photo-background">
+          <Image
+            src={post.media.url}
+            alt={`Foto de ${post.title}`}
+            fill
+            sizes="(max-width: 760px) 100vw, 716px"
+            className="object-cover"
+          />
+          {post.media.additionalPhotoCount > 0 ? (
+            <figcaption className="absolute right-2.5 bottom-2.5 rounded-full bg-foreground/75 px-2.5 py-1 text-xs font-extrabold text-surface">
+              {post.media.additionalPhotoCount === 1
+                ? "+1 foto"
+                : `+${post.media.additionalPhotoCount} fotos`}
+            </figcaption>
+          ) : null}
+        </figure>
       ) : null}
 
       <footer className="mt-4 flex items-center gap-[18px] border-t border-card-divider pt-3.5">

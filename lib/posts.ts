@@ -2,7 +2,7 @@ import "server-only";
 
 import { requireActiveUser } from "@/lib/auth";
 import type { IconAvatar, InitialsAvatar } from "@/types/avatar";
-import type { Database } from "@/types/database";
+import type { FeedPost } from "@/types/feed";
 import { createClient } from "@/utils/supabase/server";
 import type { QueryData } from "@supabase/supabase-js";
 import { connection } from "next/server";
@@ -18,6 +18,11 @@ const postTimeFormatter = new Intl.DateTimeFormat("es-EC", {
 const childNameCollator = new Intl.Collator("es", {
   sensitivity: "base",
 });
+const feedDateFormatter = new Intl.DateTimeFormat("es-EC", {
+  weekday: "long",
+  day: "numeric",
+  month: "short",
+});
 const avatarPalette = [
   { background: "#A9D9E8", foreground: "#1F7A93" },
   { background: "#F4B8CC", foreground: "#C44A7A" },
@@ -32,25 +37,23 @@ const announcementAvatar: IconAvatar = {
   foreground: "#4E72C8",
 };
 
-type PostType = Database["public"]["Enums"]["post_type"];
-
-export type FeedPostDto = {
+export type FeedAudienceKid = {
   id: string;
-  category: PostType;
-  title: string;
-  publishedAt: string;
-  publishedBy: string;
-  audience: string;
-  body: string;
-  reactions: 0;
-  comments: 0;
-  editable: boolean;
-  avatar: InitialsAvatar | IconAvatar;
-  media: {
-    kind: "photo";
-    url: string;
-    additionalPhotoCount: number;
-  } | null;
+  name: string;
+  avatar: InitialsAvatar;
+  photoConsent: boolean;
+};
+
+export type FeedAudienceRoom = {
+  id: string;
+  name: string;
+  position: number;
+};
+
+export type FeedAudience = {
+  kids: readonly FeedAudienceKid[];
+  rooms: readonly FeedAudienceRoom[];
+  activeChildCount: number;
 };
 
 type ServerSupabaseClient = Awaited<ReturnType<typeof createClient>>;
@@ -196,7 +199,7 @@ function mapFeedPost(
   post: FeedPostRow,
   currentUserId: string,
   signedUrlByPath: ReadonlyMap<string, string>,
-): FeedPostDto {
+): FeedPost {
   if (!post.author) {
     throw new Error("Unable to resolve the author of a post.");
   }
@@ -206,7 +209,7 @@ function mapFeedPost(
   const firstPhoto = photos[0];
   let title: string;
   let audience: string;
-  let avatar: FeedPostDto["avatar"];
+  let avatar: FeedPost["avatar"];
 
   if (post.room) {
     if (children.length > 0) {
@@ -234,7 +237,7 @@ function mapFeedPost(
         : createChildAvatar(children[0].id, children[0].full_name);
   }
 
-  let media: FeedPostDto["media"] = null;
+  let media: FeedPost["media"] = null;
 
   if (firstPhoto) {
     const signedUrl = signedUrlByPath.get(firstPhoto.storage_path);
@@ -267,7 +270,7 @@ function mapFeedPost(
   };
 }
 
-export async function getFeedPosts(): Promise<readonly FeedPostDto[]> {
+export async function getFeedPosts(): Promise<readonly FeedPost[]> {
   await connection();
 
   const access = await requireActiveUser();
@@ -291,4 +294,63 @@ export async function getFeedPosts(): Promise<readonly FeedPostDto[]> {
   return posts.map((post) =>
     mapFeedPost(post, access.userId, signedUrlByPath),
   );
+}
+
+/** The composer needs the persisted children and rooms of the daycare. */
+export async function getFeedAudience(
+  daycareId: string,
+): Promise<FeedAudience> {
+  const supabase = await createClient();
+  const [childrenResult, roomsResult] = await Promise.all([
+    supabase
+      .from("children")
+      .select("id, full_name, photo_consent")
+      .eq("daycare_id", daycareId)
+      .eq("status", "active")
+      .order("full_name", { ascending: true }),
+    supabase
+      .from("rooms")
+      .select("id, name, position")
+      .eq("daycare_id", daycareId)
+      .order("position", { ascending: true }),
+  ]);
+
+  if (childrenResult.error) {
+    throw new Error("Unable to load the active children of the daycare.", {
+      cause: childrenResult.error,
+    });
+  }
+
+  if (roomsResult.error) {
+    throw new Error("Unable to load daycare rooms.", {
+      cause: roomsResult.error,
+    });
+  }
+
+  const kids = childrenResult.data
+    .map((child) => ({
+      id: child.id,
+      name: child.full_name,
+      avatar: createChildAvatar(child.id, child.full_name),
+      photoConsent: child.photo_consent,
+    }))
+    .sort((firstKid, secondKid) =>
+      childNameCollator.compare(firstKid.name, secondKid.name),
+    );
+
+  return {
+    kids,
+    rooms: roomsResult.data,
+    activeChildCount: kids.length,
+  };
+}
+
+export function formatFeedDateLabel(date: Date) {
+  const parts = feedDateFormatter.formatToParts(date);
+
+  function readPart(type: Intl.DateTimeFormatPartTypes) {
+    return parts.find((part) => part.type === type)?.value ?? "";
+  }
+
+  return `${readPart("weekday")} ${readPart("day")} ${readPart("month").replace(".", "")}`;
 }
