@@ -1,6 +1,6 @@
 # SPEC 11 — Invitaciones y vínculos entre padres y niños
 
-> **Estado:** Borrador
+> **Estado:** Implementado
 > **Depende de:** SPEC 08, SPEC 09
 > **Fecha:** 2026-09-08
 > **Objetivo:** Crear el modelo persistente y las fronteras de seguridad necesarias para invitar y vincular de forma atómica una cuenta parent con un niño de su misma guardería.
@@ -35,6 +35,7 @@ La página pública de activación no justifica exponer las filas de invitación
 - Permitir que staff y admin activos consulten perfiles de otros usuarios de su guardería para mostrar padres vinculados.
 - Mantener todas las escrituras de invitaciones y vínculos detrás de operaciones administrativas controladas por Next.js.
 - Crear funciones transaccionales ejecutables únicamente por `service_role` para reemplazar, verificar y aceptar invitaciones.
+- Preparar el alta Auth con un UUID generado por el servidor y un claim privado de corta duración ejecutable únicamente por `service_role`.
 - Extender `private.handle_new_user()` para consumir una invitación durante el alta de un nuevo parent.
 - Crear perfil, vínculo y aceptación dentro de la misma transacción que inserta la identidad nueva en `auth.users`.
 - Admitir la aceptación por una cuenta parent existente de la misma guardería mediante una operación transaccional separada.
@@ -104,6 +105,12 @@ Una restricción parcial única sobre `(child_id, email)` aplica únicamente a f
 
 Una invitación `accepted` exige `accepted_by` y `accepted_at`. Los demás estados mantienen ambos campos nulos. `failed_attempts = 10` no puede coexistir con `status = 'pending'`.
 
+### `private.parent_signup_claims`
+
+Esta tabla privada conserva temporalmente el UUID Auth generado por Next.js, la invitación verificada y el email autenticado normalizado. Cada claim vence a los diez minutos, una invitación solo puede tener un claim vigente y la fila se elimina dentro de la misma transacción que aprovisiona correctamente al parent.
+
+La tabla no se expone mediante la Data API, tiene RLS habilitado con una política restrictiva que deniega clientes y concede acceso directo únicamente a `service_role`. No almacena códigos, tokens ni digests adicionales.
+
 ### Operaciones transaccionales
 
 `public.replace_parent_invitation(...)`:
@@ -136,21 +143,31 @@ Una invitación `accepted` exige `accepted_by` y `accepted_at`. Los demás estad
 - Inserta `parent_children` y marca la invitación como `accepted` en una sola transacción.
 - Es idempotente únicamente cuando la misma cuenta ya aceptó esa misma invitación.
 
-Las tres funciones revocan `EXECUTE` a `PUBLIC`, `anon` y `authenticated`, y conceden ejecución explícita solo a `service_role`. No constituyen una API pública para el navegador.
+`public.prepare_parent_signup(...)`:
+
+- Es `SECURITY INVOKER` y solo puede ejecutarla `service_role`.
+- Recibe una invitación previamente verificada, un UUID Auth generado por el servidor y el email autenticado.
+- Bloquea y vuelve a comprobar que la invitación continúa pendiente, vigente y asociada al mismo email.
+- Reemplaza cualquier claim previo para esa invitación y crea un claim privado válido durante diez minutos.
+
+Las cuatro funciones revocan `EXECUTE` a `PUBLIC`, `anon` y `authenticated`, y conceden ejecución explícita solo a `service_role`. No constituyen una API pública para el navegador.
 
 ### Aprovisionamiento de un parent nuevo
 
-`private.handle_new_user()` conserva sin cambios el alta actual de staff y admin. Cuando `NEW.raw_app_meta_data` contenga `role = 'parent'`, también exige un `invitation_id` administrativo.
+La versión alojada de Supabase Auth observada durante la implementación inserta la fila base de `auth.users` antes de aplicar el `app_metadata` enviado a `auth.admin.createUser()`. Por ello, Next.js genera primero el UUID de la identidad, ejecuta `prepare_parent_signup(...)` y pasa ese mismo UUID a `createUser()` junto con el `app_metadata` final. El trigger nunca usa `raw_user_meta_data` para tomar decisiones de autorización.
+
+`private.handle_new_user()` busca primero un claim privado vigente para `NEW.id`. Si no existe, conserva sin cambios el contrato anterior basado en metadata administrativa para staff y admin, además de la rama parent compatible con entornos donde `raw_app_meta_data` ya está disponible durante el insert.
 
 Para parent, la función:
 
-1. Bloquea la invitación correspondiente.
-2. Comprueba que continúa pendiente y vigente.
-3. Comprueba que `NEW.email` normalizado coincide con `invitations.email`.
-4. Comprueba que `daycare_id` administrativo coincide con la invitación.
-5. Inserta el perfil `public.users` con rol parent y estado active.
-6. Inserta `public.parent_children` usando el niño y parentesco de la invitación.
-7. Marca la invitación como accepted con `accepted_by = NEW.id`.
+1. Bloquea el claim privado correspondiente a `NEW.id` y comprueba que continúa vigente.
+2. Bloquea la invitación correspondiente.
+3. Comprueba que continúa pendiente y vigente.
+4. Comprueba que `NEW.email` normalizado coincide con el claim y con `invitations.email`.
+5. Deriva `daycare_id`, rol, niño y parentesco únicamente desde la invitación confiable.
+6. Inserta el perfil `public.users` con rol parent y estado active.
+7. Inserta `public.parent_children` usando el niño y parentesco de la invitación.
+8. Marca la invitación como accepted con `accepted_by = NEW.id` y elimina el claim.
 
 Cualquier fallo aborta la inserción en `auth.users`, el perfil, el vínculo y la aceptación como una sola unidad.
 
@@ -165,13 +182,12 @@ Cualquier fallo aborta la inserción en `auth.users`, el perfil, el vínculo y l
 
 `public.parent_children`:
 
-- `parent_children_select_own_managed_daycare` permite a staff y admin activos leer vínculos de su guardería.
-- `parent_children_select_own_parent` permite a un parent activo leer filas donde `parent_id = auth.uid()`.
+- `parent_children_select_accessible` permite a staff y admin activos leer vínculos de su guardería y a un parent activo leer únicamente filas donde `parent_id = auth.uid()`.
 - `authenticated` recibe únicamente `SELECT`.
 - `anon` no recibe privilegios ni políticas.
 - `authenticated` no recibe `INSERT`, `UPDATE` ni `DELETE`.
 
-`public.users` recibe `users_select_own_managed_daycare`, que permite a staff y admin activos consultar perfiles de su guardería. La política propia existente continúa permitiendo a cada usuario activo leer su perfil.
+`public.users` recibe `users_select_accessible`, que combina la lectura del perfil propio activo con la lectura de perfiles de la guardería administrada para evitar políticas permisivas duplicadas.
 
 ## Artefactos
 
@@ -182,6 +198,8 @@ Cualquier fallo aborta la inserción en `auth.users`, el perfil, el vínculo y l
 - `public.replace_parent_invitation(...)`.
 - `public.verify_parent_invitation(...)`.
 - `public.accept_parent_invitation(...)`.
+- `public.prepare_parent_signup(...)`.
+- `private.parent_signup_claims`, con RLS, restricciones y privilegios mínimos.
 - Índices para todas las columnas FK y para las búsquedas por tenant, estado, email y vencimiento.
 
 **Objetos remotos modificados:**
@@ -197,9 +215,9 @@ Cualquier fallo aborta la inserción en `auth.users`, el perfil, el vínculo y l
 ## Plan de implementación
 
 1. Volver a inspeccionar tablas, restricciones, índices, enums, funciones, triggers, políticas, privilegios e historial remoto inmediatamente antes de migrar.
-2. Preparar una única migración `create_parent_invitations_and_links` con las dos tablas, restricciones tenant-aware, índices, trigger de actualización y privilegios mínimos.
-3. Crear las tres operaciones transaccionales con nombres calificados, validaciones internas y ejecución exclusiva de `service_role`.
-4. Extender `private.handle_new_user()` sin cambiar el contrato vigente para altas staff/admin y añadir la rama parent basada en metadata administrativa.
+2. Preparar una única migración `create_parent_invitations_and_links` con las tablas persistentes, restricciones tenant-aware, índices, trigger de actualización y privilegios mínimos.
+3. Crear las cuatro operaciones transaccionales con nombres calificados, validaciones internas y ejecución exclusiva de `service_role`.
+4. Extender `private.handle_new_user()` sin cambiar el contrato vigente para altas staff/admin y añadir la rama parent basada en un claim administrativo privado de corta duración.
 5. Aplicar la migración mediante `supabase_apply_migration` y no mediante DDL en `supabase_execute_sql`.
 6. Verificar en los catálogos de PostgreSQL columnas, tipos, defaults, restricciones, acciones de borrado, índices, funciones, seguridad, triggers, RLS y grants.
 7. Probar en transacciones revertidas el aislamiento de tenant, las políticas de lectura y el bloqueo de todas las escrituras directas de `authenticated` y `anon`.
@@ -211,39 +229,40 @@ Cualquier fallo aborta la inserción en `auth.users`, el perfil, el vínculo y l
 
 ## Criterios de aceptación
 
-- [ ] La migración remota se llama `create_parent_invitations_and_links` y aparece una sola vez en el historial.
-- [ ] `parent_children` e `invitations` tienen RLS habilitado desde su creación.
-- [ ] `anon` no tiene privilegios ni políticas sobre ninguna de las dos tablas.
-- [ ] No existe un RPC de invitaciones ejecutable por `anon`.
-- [ ] No se almacena el código ni el token en texto plano.
-- [ ] Ambos digests exigen 64 caracteres hexadecimales.
-- [ ] Un padre y un niño de guarderías distintas no pueden vincularse aunque la operación evite RLS.
-- [ ] Un invitador no puede crear una invitación para un niño de otra guardería.
-- [ ] Un mismo parent puede vincularse con varios niños de su guardería.
-- [ ] Un niño puede vincularse con varios parents de su guardería.
-- [ ] El vínculo del mismo parent y niño no puede duplicarse.
-- [ ] Solo existe una invitación pending por niño y email normalizado.
-- [ ] Reemplazar una invitación cancela la anterior e inserta una nueva de forma atómica.
-- [ ] Una invitación para otro niño no se considera duplicada.
-- [ ] Una invitación aceptada registra `accepted_by` y `accepted_at`.
-- [ ] Una invitación vencida cambia a `expired` al intentar verificarla.
-- [ ] Un código incorrecto incrementa el contador sin revelar datos de la invitación.
-- [ ] El décimo código incorrecto cancela la invitación.
-- [ ] Intentos concurrentes no superan el límite ni aceptan dos veces la misma invitación.
-- [ ] Staff y admin activos leen invitaciones y vínculos únicamente de su guardería.
-- [ ] Un parent activo lee únicamente sus propios vínculos.
-- [ ] Staff y admin pueden leer el nombre del parent vinculado dentro de su guardería.
-- [ ] `authenticated` no puede insertar, actualizar ni eliminar directamente invitaciones o vínculos.
-- [ ] Las funciones administrativas no son ejecutables por `PUBLIC`, `anon` ni `authenticated`.
-- [ ] El alta de un parent nuevo exige `invitation_id` en metadata administrativa.
-- [ ] El trigger compara el email Auth normalizado con la invitación.
-- [ ] Una invitación inválida impide crear la identidad Auth y no deja perfiles huérfanos.
-- [ ] Una invitación válida crea identidad, perfil, vínculo y aceptación en una sola transacción.
-- [ ] El alta vigente de staff/admin continúa funcionando con su contrato anterior.
-- [ ] Una cuenta parent existente de la misma guardería puede aceptar otro niño.
-- [ ] Una cuenta de otra guardería, otro rol u otro email no puede aceptar la invitación.
-- [ ] Las claves foráneas relevantes tienen índices de soporte.
-- [ ] Los asesores de seguridad y rendimiento no reportan problemas introducidos por esta migración.
+- [x] La migración remota se llama `create_parent_invitations_and_links` y aparece una sola vez en el historial.
+- [x] `parent_children` e `invitations` tienen RLS habilitado desde su creación.
+- [x] `anon` no tiene privilegios ni políticas sobre ninguna de las dos tablas.
+- [x] No existe un RPC de invitaciones ejecutable por `anon`.
+- [x] No se almacena el código ni el token en texto plano.
+- [x] Ambos digests exigen 64 caracteres hexadecimales.
+- [x] Un padre y un niño de guarderías distintas no pueden vincularse aunque la operación evite RLS.
+- [x] Un invitador no puede crear una invitación para un niño de otra guardería.
+- [x] Un mismo parent puede vincularse con varios niños de su guardería.
+- [x] Un niño puede vincularse con varios parents de su guardería.
+- [x] El vínculo del mismo parent y niño no puede duplicarse.
+- [x] Solo existe una invitación pending por niño y email normalizado.
+- [x] Reemplazar una invitación cancela la anterior e inserta una nueva de forma atómica.
+- [x] Una invitación para otro niño no se considera duplicada.
+- [x] Una invitación aceptada registra `accepted_by` y `accepted_at`.
+- [x] Una invitación vencida cambia a `expired` al intentar verificarla.
+- [x] Un código incorrecto incrementa el contador sin revelar datos de la invitación.
+- [x] El décimo código incorrecto cancela la invitación.
+- [x] Intentos concurrentes no superan el límite ni aceptan dos veces la misma invitación.
+- [x] Staff y admin activos leen invitaciones y vínculos únicamente de su guardería.
+- [x] Un parent activo lee únicamente sus propios vínculos.
+- [x] Staff y admin pueden leer el nombre del parent vinculado dentro de su guardería.
+- [x] `authenticated` no puede insertar, actualizar ni eliminar directamente invitaciones o vínculos.
+- [x] Las funciones administrativas no son ejecutables por `PUBLIC`, `anon` ni `authenticated`.
+- [x] El alta de un parent nuevo exige un claim privado preparado por `service_role` para el UUID Auth generado por el servidor.
+- [x] `auth.admin.createUser()` persiste `invitation_id`, `daycare_id` y `role = 'parent'` en `app_metadata` aunque el trigger derive la autorización desde el claim privado.
+- [x] El trigger compara el email Auth normalizado con la invitación.
+- [x] Una invitación inválida impide crear la identidad Auth y no deja perfiles huérfanos.
+- [x] Una invitación válida crea identidad, perfil, vínculo y aceptación en una sola transacción.
+- [x] El alta vigente de staff/admin continúa funcionando con su contrato anterior.
+- [x] Una cuenta parent existente de la misma guardería puede aceptar otro niño.
+- [x] Una cuenta de otra guardería, otro rol u otro email no puede aceptar la invitación.
+- [x] Las claves foráneas relevantes tienen índices de soporte.
+- [x] Los asesores de seguridad y rendimiento no reportan problemas introducidos por esta migración.
 
 ## Decisiones
 
@@ -259,6 +278,7 @@ Cualquier fallo aborta la inserción en `auth.users`, el perfil, el vínculo y l
 - **Sí:** una cuenta existente debe pertenecer a la misma guardería.
 - **No:** rediseñar usuarios como membresías multi-guardería dentro de este alcance.
 - **Sí:** crear el vínculo durante el trigger de un usuario nuevo para conservar atomicidad con Supabase Auth.
+- **Sí:** preparar un claim privado vinculado al UUID Auth porque el servicio alojado aplica `app_metadata` después del `AFTER INSERT`; copiar esos datos a `user_metadata` sería una frontera de autorización insegura.
 - **Sí:** usar una función transaccional para cuentas existentes porque no se dispara un alta de Auth.
 - **Sí:** conservar estados históricos para auditoría y mostrar solamente active y pending en la aplicación.
 - **No:** conceder acceso parent a niños o feeds antes de especificar qué campos puede leer ese rol.
@@ -271,6 +291,7 @@ Cualquier fallo aborta la inserción en `auth.users`, el perfil, el vínculo y l
 | Una política sobre `users` puede causar recursión. | Basar la autorización del actor en una función privada o consulta no recursiva revisada y probar las políticas con identidades de distintos tenants. |
 | Dos aceptaciones concurrentes pueden crear vínculos o estados inconsistentes. | Bloquear la invitación con `FOR UPDATE`, usar `UNIQUE (parent_id, child_id)` y confirmar vínculo y estado en una sola transacción. |
 | Modificar `private.handle_new_user()` puede romper altas staff/admin existentes. | Mantener su rama actual, aislar el contrato parent y probar ambos caminos antes de aprobar la migración. |
+| Un alta Auth abandonada puede dejar un claim temporal. | Limitar su vigencia a diez minutos, reemplazarlo en un nuevo intento y eliminarlo al aceptar o borrar la invitación. |
 | Un borrado en cascada puede eliminar historial necesario. | Usar cascada únicamente para dependencias sin entidad raíz y documentar la retención ligada a usuarios y niños existentes. |
 | El modelo actual impide una identidad en varias guarderías. | Rechazar ese caso con un error explícito y reservar membresías multi-tenant para otra spec. |
 
