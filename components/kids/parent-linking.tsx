@@ -7,11 +7,16 @@ import type { KidParent } from "@/types/kids";
 import { useEffect, useRef, useState } from "react";
 
 type ParentLinkingProps = {
+  childId: string;
   kidName: string;
   parents: readonly KidParent[];
 };
 
-export function ParentLinking({ kidName, parents }: ParentLinkingProps) {
+export function ParentLinking({
+  childId,
+  kidName,
+  parents,
+}: ParentLinkingProps) {
   const [isLinkParentOpen, setIsLinkParentOpen] = useState(false);
   const [showLinkParentSuccess, setShowLinkParentSuccess] = useState(false);
   const successTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
@@ -39,7 +44,8 @@ export function ParentLinking({ kidName, parents }: ParentLinkingProps) {
     setIsLinkParentOpen(true);
   }
 
-  function handleLinkParentSubmit() {
+  /** Reached only after the invitation is persisted and Resend confirmed it. */
+  function handleLinkParentSuccess() {
     pendingSuccessRef.current = true;
     setIsLinkParentOpen(false);
   }
@@ -67,10 +73,11 @@ export function ParentLinking({ kidName, parents }: ParentLinkingProps) {
 
       <LinkParentModal
         isOpen={isLinkParentOpen}
+        childId={childId}
         kidName={kidName}
         onClose={() => setIsLinkParentOpen(false)}
         onAfterClose={handleLinkParentAfterClose}
-        onSubmit={handleLinkParentSubmit}
+        onSuccess={handleLinkParentSuccess}
       />
 
       <SuccessNotice>

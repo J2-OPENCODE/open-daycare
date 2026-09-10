@@ -4,12 +4,50 @@ import "server-only";
 
 import { validateAddKidFormValues } from "@/lib/add-kid-form";
 import { getAuthAccessState } from "@/lib/auth";
+import { renderParentInvitationEmail } from "@/lib/email/parent-invitation-email";
+import {
+  buildActivationUrl,
+  buildInvitationIdempotencyKey,
+  cancelPendingInvitation,
+  CHILD_UNAVAILABLE_MESSAGE,
+  computeInvitationExpiry,
+  confirmInvitationSent,
+  countInvitationsByActor,
+  countInvitationsForTarget,
+  findActiveChildForInvitation,
+  findRoomName,
+  generateInvitationCode,
+  generateInvitationToken,
+  hashInvitationSecret,
+  hasLinkedParentWithEmail,
+  INVITATION_CONFLICT_MESSAGE,
+  INVITATION_ERROR_MESSAGE,
+  INVITATION_RATE_LIMIT,
+  INVITATION_RATE_LIMIT_MESSAGE,
+  normalizeEmail,
+  replaceParentInvitation,
+  sendInvitationEmail,
+} from "@/lib/invitations";
+import {
+  isLinkParentRelationship,
+  toPersistedRelationship,
+  validateParentEmail,
+  validateParentName,
+  validateRelationship,
+} from "@/lib/link-parent-form";
 import type { TablesInsert } from "@/types/database";
+import type {
+  CreateParentInvitationField,
+  CreateParentInvitationInput,
+  CreateParentInvitationResult,
+} from "@/types/invitations";
 import type {
   AddKidActionResult,
   AddKidField,
   AddKidFormValues,
 } from "@/types/kids";
+import { createAdminClient } from "@/utils/supabase/admin";
+import type { AdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
@@ -245,4 +283,220 @@ export async function addKid(
 
     sequence += 1;
   }
+}
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+type UntrustedInvitationInput = {
+  childId: string;
+  parentName: string;
+  email: string;
+  relationship: unknown;
+};
+
+/** Every argument arrives from the browser, so nothing is assumed about it. */
+function parseInvitationInput(input: unknown): UntrustedInvitationInput | null {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    return null;
+  }
+
+  const record = input as Record<string, unknown>;
+
+  if (
+    typeof record.childId !== "string" ||
+    typeof record.parentName !== "string" ||
+    typeof record.email !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    childId: record.childId,
+    parentName: record.parentName,
+    email: record.email,
+    relationship: record.relationship,
+  };
+}
+
+export async function createParentInvitation(
+  input: CreateParentInvitationInput,
+): Promise<CreateParentInvitationResult> {
+  const parsedInput = parseInvitationInput(input);
+
+  if (!parsedInput) {
+    return { status: "error", message: INVITATION_ERROR_MESSAGE };
+  }
+
+  // Re-authorize inside the action even though the page is already protected.
+  let access: Awaited<ReturnType<typeof getAuthAccessState>>;
+
+  try {
+    access = await getAuthAccessState();
+  } catch {
+    return {
+      status: "error",
+      message: "No pudimos verificar tu cuenta. Intentá nuevamente.",
+    };
+  }
+
+  if (access.status === "anonymous") {
+    return { status: "error", message: "Iniciá sesión para invitar padres." };
+  }
+
+  if (access.status !== "active" || access.role === "parent") {
+    return { status: "error", message: "No tenés permisos para invitar padres." };
+  }
+
+  const errors: Partial<Record<CreateParentInvitationField, string>> = {};
+  const parentNameError = validateParentName(parsedInput.parentName);
+  const emailError = validateParentEmail(parsedInput.email);
+  const relationshipError = validateRelationship(parsedInput.relationship);
+
+  if (parentNameError) {
+    errors.parentName = parentNameError;
+  }
+
+  if (emailError) {
+    errors.email = emailError;
+  }
+
+  if (relationshipError) {
+    errors.relationship = relationshipError;
+  }
+
+  // Neither Supabase nor Resend is called while a visible field is invalid.
+  if (Object.keys(errors).length > 0) {
+    return { status: "invalid", errors };
+  }
+
+  if (!isLinkParentRelationship(parsedInput.relationship)) {
+    return {
+      status: "invalid",
+      errors: { relationship: "Elegí un parentesco válido." },
+    };
+  }
+
+  if (!UUID_PATTERN.test(parsedInput.childId)) {
+    return { status: "error", message: CHILD_UNAVAILABLE_MESSAGE };
+  }
+
+  const parentName = parsedInput.parentName.trim();
+  const normalizedEmail = normalizeEmail(parsedInput.email);
+  const relationship = toPersistedRelationship(parsedInput.relationship);
+  const now = new Date();
+  let admin: AdminClient;
+
+  // Absent or malformed private configuration fails before any external call.
+  try {
+    admin = createAdminClient();
+  } catch {
+    return { status: "error", message: INVITATION_ERROR_MESSAGE };
+  }
+
+  let child: Awaited<ReturnType<typeof findActiveChildForInvitation>>;
+  let roomName: string | null;
+
+  try {
+    child = await findActiveChildForInvitation(
+      admin,
+      parsedInput.childId,
+      access.daycareId,
+    );
+
+    // A missing, archived or foreign-tenant child yields the same message.
+    if (!child) {
+      return { status: "error", message: CHILD_UNAVAILABLE_MESSAGE };
+    }
+
+    roomName = await findRoomName(admin, child.room_id, access.daycareId);
+
+    if (!roomName) {
+      return { status: "error", message: CHILD_UNAVAILABLE_MESSAGE };
+    }
+
+    const [actorCount, targetCount] = await Promise.all([
+      countInvitationsByActor(admin, access.userId, now),
+      countInvitationsForTarget(admin, child.id, normalizedEmail, now),
+    ]);
+
+    if (
+      actorCount >= INVITATION_RATE_LIMIT ||
+      targetCount >= INVITATION_RATE_LIMIT
+    ) {
+      return { status: "rate_limited", message: INVITATION_RATE_LIMIT_MESSAGE };
+    }
+
+    if (await hasLinkedParentWithEmail(admin, child.id, normalizedEmail)) {
+      return { status: "conflict", message: INVITATION_CONFLICT_MESSAGE };
+    }
+  } catch {
+    return { status: "error", message: INVITATION_ERROR_MESSAGE };
+  }
+
+  const issuedAt = new Date();
+  const code = generateInvitationCode();
+  const token = generateInvitationToken();
+  let invitationId: string;
+
+  try {
+    invitationId = await replaceParentInvitation(admin, {
+      childId: child.id,
+      invitedBy: access.userId,
+      fullName: parentName,
+      normalizedEmail,
+      relationship,
+      codeDigest: hashInvitationSecret(code),
+      tokenDigest: hashInvitationSecret(token),
+      expiresAt: computeInvitationExpiry(issuedAt),
+    });
+  } catch {
+    return { status: "error", message: INVITATION_ERROR_MESSAGE };
+  }
+
+  let email: ReturnType<typeof renderParentInvitationEmail>;
+
+  try {
+    email = renderParentInvitationEmail({
+      parentName,
+      kidName: child.full_name,
+      roomLabel: `Sala ${roomName}`,
+      code,
+      activationUrl: buildActivationUrl(token),
+    });
+  } catch {
+    // A configuration error must not leave a usable invitation behind.
+    await cancelPendingInvitation(admin, invitationId);
+    return { status: "error", message: INVITATION_ERROR_MESSAGE };
+  }
+
+  const send = await sendInvitationEmail(
+    email,
+    normalizedEmail,
+    buildInvitationIdempotencyKey(invitationId),
+  );
+
+  if (send.status === "failed") {
+    await cancelPendingInvitation(admin, invitationId);
+    return { status: "error", message: INVITATION_ERROR_MESSAGE };
+  }
+
+  const confirmed = await confirmInvitationSent(
+    admin,
+    invitationId,
+    send.resendEmailId,
+    new Date(),
+  );
+
+  // The mail may already be on its way, so the row is cancelled rather than
+  // left pending without a traceable identifier.
+  if (!confirmed) {
+    await cancelPendingInvitation(admin, invitationId);
+    return { status: "error", message: INVITATION_ERROR_MESSAGE };
+  }
+
+  revalidatePath("/kids");
+  revalidatePath(`/kids/${child.slug}`);
+
+  return { status: "success" };
 }

@@ -38,7 +38,11 @@ export function KidProfile({ kid }: KidProfileProps) {
             <SunIcon size={18} />
             Resumen del día
           </button>
-          <ParentLinking kidName={kid.name} parents={kid.parents} />
+          <ParentLinking
+            childId={kid.id}
+            kidName={kid.name}
+            parents={kid.parents}
+          />
         </aside>
       </div>
     </div>

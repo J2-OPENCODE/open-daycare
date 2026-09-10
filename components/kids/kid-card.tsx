@@ -7,13 +7,20 @@ type KidCardProps = {
   kid: Kid;
 };
 
-function getParentsLabel(parentCount: number) {
-  if (parentCount === 0) {
+/** Only active links count; a pending invitation is not a link yet. */
+function getParentsLabel(activeParentCount: number) {
+  if (activeParentCount === 0) {
     return "sin padres vinculados";
   }
 
-  return `${parentCount} ${parentCount === 1 ? "padre vinculado" : "padres vinculados"}`;
+  return `${activeParentCount} ${activeParentCount === 1 ? "padre vinculado" : "padres vinculados"}`;
 }
+
+const BADGE_CLASSNAME = {
+  medical: "bg-medical-badge-soft text-medical-badge-strong",
+  pending: "bg-parent-pending-soft text-parent-pending-strong",
+  link: "bg-link-badge-soft text-link-badge-strong",
+} as const;
 
 export function KidCard({ kid }: KidCardProps) {
   return (
@@ -29,16 +36,14 @@ export function KidCard({ kid }: KidCardProps) {
         </span>
         <span className="block text-[13px] leading-[1.35] text-muted">
           {kid.ageYears} {kid.ageYears === 1 ? "año" : "años"} ·{" "}
-          {getParentsLabel(kid.parents.length)}
+          {getParentsLabel(kid.activeParentCount)}
         </span>
       </span>
 
-      {kid.listBadge?.kind === "medical" ? (
-        <span className="shrink-0 rounded-full bg-medical-badge-soft px-[9px] py-[5px] text-[11px] font-extrabold text-medical-badge-strong">
-          {kid.listBadge.label}
-        </span>
-      ) : kid.listBadge?.kind === "link" ? (
-        <span className="shrink-0 rounded-full bg-link-badge-soft px-[9px] py-[5px] text-[11px] font-extrabold text-link-badge-strong">
+      {kid.listBadge ? (
+        <span
+          className={`shrink-0 rounded-full px-[9px] py-[5px] text-[11px] font-extrabold ${BADGE_CLASSNAME[kid.listBadge.kind]}`}
+        >
           {kid.listBadge.label}
         </span>
       ) : (
