@@ -3,7 +3,7 @@ name: spec-impl-codex
 description: Implements an approved spec by delegating every plan step to Codex. Validates that the state means "Approved" (in any language), creates a git branch named after the spec, and drives Codex step by step with pauses to review diffs.
 disable-model-invocation: true
 argument-hint: <NN-spec-name>
-allowed-tools: Read, Glob, Grep, Write, AskUserQuestion, Agent, Bash(node:*), Bash(ls:*), Bash(cat:*), Bash(git status:*), Bash(git branch:*), Bash(git checkout:*), Bash(git log:*), Bash(git diff:*), Bash(git stash:*)
+allowed-tools: Read, Glob, Grep, Write, AskUserQuestion, Agent, Bash(node:*), Bash(ls:*), Bash(cat:*), Bash(npx tsc:*), Bash(npm run lint:*), Bash(git status:*), Bash(git branch:*), Bash(git checkout:*), Bash(git log:*), Bash(git diff:*), Bash(git stash:*), mcp__supabase__get_advisors
 ---
 
 # /spec-impl-codex — Implementer of approved specs, driven by Codex
@@ -203,6 +203,28 @@ Wait for explicit confirmation ("yes", "go ahead", "go", or equivalent). Do not 
 - The acceptance criteria related to that step.
 - The scope limit: implement **only** step N; do not start later steps.
 - The repository rules from `AGENTS.md` that apply to the step — npm and `package-lock.json` authoritative, Next.js 16 App Router with the docs in `node_modules/next/dist/docs/`, Tailwind v4 with no config file, strict TypeScript with `@/*` mapped to the repo root, RLS enabled on every table, English identifiers and persisted values, Spanish user-facing labels.
+- **The repo skills Codex must load for this step**, named explicitly. Codex discovers the skills on its own, but it only applies one when the prompt names it or the task clearly matches its description, and **skills do not carry across turns**. Even with `--resume-last`, repeat the relevant names in **every** step prompt:
+  - `supabase` — any step touching Database, Auth, Storage, Realtime, Edge Functions, the client libraries or the MCP server.
+  - `supabase-postgres-best-practices` — any step writing or changing SQL, tables, columns, indexes, migrations, RLS policies, triggers or database functions. For database work, name it together with `supabase`.
+  - `next-best-practices` — steps adding or changing routes, layouts, server/client component boundaries, data fetching or route handlers.
+  - `next-cache-components` — only steps that touch caching: `use cache`, `cacheLife`, `cacheTag`, PPR.
+  - `react-best-practices` — steps that write or refactor components and hooks. In practice, almost every UI step.
+  - `composition-patterns` — only when a step reshapes a component's API rather than adding a screen.
+  - `tailwind-css-patterns` — steps with non-trivial Tailwind v4 styling.
+  - `typescript-advanced-types` — steps with non-trivial typing, such as a shared response shape or a generic helper.
+- **The skills Codex must not invoke:** state explicitly that `spec`, `spec-impl` and `spec-impl-codex` are forbidden. They appear in Codex's skill list because `disable-model-invocation` is Claude Code frontmatter that Codex ignores, and invoking one from inside a step re-enters this flow. Say so in the prompt; do not assume Codex will skip them on its own.
+- **For steps that touch the database**, add these rules to the prompt:
+  - Database specifications live under `specs/database/`.
+  - Use the Supabase MCP: `supabase_apply_migration` for DDL, `supabase_execute_sql` for non-DDL queries. Run the security and performance advisors after the schema change.
+  - Enable RLS on every table in an exposed schema and write policies for the real ownership and role model. Never use user-editable `user_metadata` for authorization.
+  - New public tables ship writable to `authenticated`: **REVOKE before GRANT** in every table migration.
+  - Supabase Auth owns credentials in `auth.users`; profile data belongs in `public.users`. Never duplicate email or password hashes in the domain schema.
+  - Do not hardcode generated IDs in data migrations. UUID primary keys, `timestamptz` audit fields, English identifiers and persisted values.
+- **The verification commands that actually exist in this repo**, so Codex does not invent any:
+  - Type-check with `npx tsc --noEmit`.
+  - Lint with `npm run lint -- app` (or a single file: `npm run lint -- app/page.tsx`). Bare `npm run lint` also scans the generated `referencias/pantallas/support.js` and currently fails there — **do not edit that generated file to satisfy lint.**
+  - `npm run build` for production verification.
+  - **There is no test runner configured.** Do not run `npm test`, and never report tests as passing.
 - The explicit instruction: **do not commit, do not create branches, do not push.** Leave every change in the working tree.
 - The expected report: which files were touched, what was done, and any assumption made.
 
@@ -223,9 +245,17 @@ node "<companion path>" task --write --cwd "<repository root>" --prompt-file "<p
   If it reports `available: true`, add `--resume-last` to the `task` call. If it reports `available: false`, run fresh. If a resumed run fails, retry once as a fresh run with the same prompt file, and say that you did.
 - Foreground by default. Only if the user asks for background, launch the same command with `run_in_background: true` and point them to `/codex:status`; do not poll it yourself in the same turn.
 
-**3. Present Codex's output.** Preserve its structure: verdict, summary, findings, touched files, next steps. Use the file paths and line numbers exactly as reported. Keep Codex's own distinction between facts, inferences and open questions. Do not rewrite it into your own analysis.
+**3. Present Codex's output verbatim.** Do not paraphrase, summarize, shorten or rewrite it. Reproduce its structure as it came: verdict, summary, findings, touched files, next steps. Use the file paths and line numbers exactly as reported. Keep Codex's own distinction between facts, inferences and open questions. Anything of your own — the diff summary, the verification results, your scope observations — goes **after** Codex's output, in a clearly separated section of your own.
 
 **4. Show the real diff.** Run `git status --short` and `git diff --stat` and show them. That is the ground truth of what changed, not Codex's narrative.
+
+**4b. Verify the step yourself.** Do not rely on Codex's claim that it verified.
+
+- If the step touched TypeScript or TSX, run `npx tsc --noEmit`.
+- If the step touched files under `app/`, run `npm run lint -- app`.
+- If the step touched the database, run the Supabase security and performance advisors.
+
+Report the result plainly, **including failures**, with the shortest decisive line of the error. Do not fix the code yourself: report the failure and let the user decide whether to re-dispatch the step to Codex. Never run bare `npm run lint` (it fails on the generated `referencias/pantallas/support.js`) and never run `npm test` (no test runner is configured).
 
 **5. Pause.** Say:
 
@@ -289,8 +319,9 @@ Do not change the spec's state and do not commit in either case. Both remain the
   Phase 3  →  codex-companion setup --json → ready
               git checkout -b spec-01-mvp-arkanoid
               Shows objective, scope, plan and criteria
-  Phase 4  →  Step 1: prompt file → task --write → diff → pause
-              Step 2..N: task --write --resume-last → diff → pause
+  Phase 4  →  Step 1: prompt file (skills named, verification commands) →
+              task --write → output verbatim → diff → tsc/lint → pause
+              Step 2..N: task --write --resume-last → same rhythm
               Ends by asking whether to run the spec-verifier agent now or later
 
 /spec-impl-codex 02-powerups  (state: Draft / Borrador)
