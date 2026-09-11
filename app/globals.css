@@ -31,6 +31,10 @@
   --meal-strong: #9a7b1e;
   --nap-soft: #e7dcf6;
   --nap-strong: #7b5fc0;
+  --mood-soft: #f9dae5;
+  --mood-strong: #c44a7a;
+  --photo-soft: #ece3f0;
+  --photo-strong: #8a6f96;
   --photo-background: #f4ece1;
   --photo-border: #dbcdba;
   --photo-foreground: #b0a290;
@@ -105,6 +109,10 @@
   --color-meal-strong: var(--meal-strong);
   --color-nap-soft: var(--nap-soft);
   --color-nap-strong: var(--nap-strong);
+  --color-mood-soft: var(--mood-soft);
+  --color-mood-strong: var(--mood-strong);
+  --color-photo-soft: var(--photo-soft);
+  --color-photo-strong: var(--photo-strong);
   --color-photo-background: var(--photo-background);
   --color-photo-border: var(--photo-border);
   --color-photo-foreground: var(--photo-foreground);

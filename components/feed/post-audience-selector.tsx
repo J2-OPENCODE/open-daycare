@@ -1,30 +1,53 @@
+import {
+  PostRoomSelector,
+  type PostRoomOption,
+} from "@/components/feed/post-room-selector";
 import { Avatar } from "@/components/ui/avatar";
-import type { CreatePostAudience } from "@/lib/create-post-form";
-import type { Kid } from "@/types/kids";
+import type {
+  CreatePostAudience,
+  CreatePostChildPhotoConsent,
+} from "@/lib/create-post-form";
+import type { InitialsAvatar } from "@/types/avatar";
 import type { RefObject } from "react";
 
-type AudienceKid = Pick<Kid, "id" | "name" | "avatar">;
+export type PostAudienceKid = Pick<
+  CreatePostChildPhotoConsent,
+  "id" | "name"
+> & {
+  avatar: InitialsAvatar;
+  photoConsent?: CreatePostChildPhotoConsent["photoConsent"];
+};
 
 type PostAudienceSelectorProps = {
-  kids: readonly AudienceKid[];
+  kids: readonly PostAudienceKid[];
+  rooms: readonly PostRoomOption[];
   value: CreatePostAudience;
   onChange: (audience: CreatePostAudience) => void;
   error?: string;
+  roomError?: string;
   firstButtonRef?: RefObject<HTMLButtonElement | null>;
+  roomSelectRef?: RefObject<HTMLSelectElement | null>;
 };
 
 const baseButtonClassName =
   "flex items-center rounded-full border-[1.5px] text-sm font-bold outline-none transition-[background-color,border-color,color,box-shadow] focus-visible:ring-2 focus-visible:ring-coral-strong focus-visible:ring-offset-2 focus-visible:ring-offset-modal-card";
+const kidNameCollator = new Intl.Collator("es", { sensitivity: "base" });
 
 export function PostAudienceSelector({
   kids,
+  rooms,
   value,
   onChange,
   error,
+  roomError,
   firstButtonRef,
+  roomSelectRef,
 }: PostAudienceSelectorProps) {
   const selectedKidIds = value.kind === "kids" ? value.kidIds : [];
   const isWholeRoomSelected = value.kind === "room";
+  const orderedKids = [...kids].sort((firstKid, secondKid) =>
+    kidNameCollator.compare(firstKid.name, secondKid.name),
+  );
 
   function toggleKid(kidId: string) {
     if (value.kind === "room") {
@@ -43,7 +66,7 @@ export function PostAudienceSelector({
     onChange(
       isWholeRoomSelected
         ? { kind: "kids", kidIds: [] }
-        : { kind: "room" },
+        : { kind: "room", roomId: null },
     );
   }
 
@@ -61,7 +84,7 @@ export function PostAudienceSelector({
       </h3>
 
       <div className="flex flex-wrap gap-[9px]">
-        {kids.map((kid, index) => {
+        {orderedKids.map((kid, index) => {
           const isSelected = selectedKidIds.includes(kid.id);
           const firstName = kid.name.split(" ", 1)[0];
 
@@ -98,6 +121,20 @@ export function PostAudienceSelector({
           Toda la sala
         </button>
       </div>
+
+      {value.kind === "room" ? (
+        <div className="mt-4">
+          <PostRoomSelector
+            rooms={rooms}
+            value={value.roomId}
+            onChange={(roomId) => {
+              onChange({ kind: "room", roomId });
+            }}
+            error={roomError}
+            selectRef={roomSelectRef}
+          />
+        </div>
+      ) : null}
 
       {error ? (
         <p

@@ -1,7 +1,17 @@
 import type { IconAvatar, InitialsAvatar } from "@/types/avatar";
+import type { Database } from "@/types/database";
 
-type FeedPostBase = {
+export type FeedPostCategory = Database["public"]["Enums"]["post_type"];
+
+export type FeedPostPhoto = {
+  kind: "photo";
+  url: string;
+  additionalPhotoCount: number;
+};
+
+export type FeedPost = {
   id: string;
+  category: FeedPostCategory;
   title: string;
   publishedAt: string;
   publishedBy: string;
@@ -10,39 +20,14 @@ type FeedPostBase = {
   reactions: number;
   comments: number;
   editable: boolean;
+  avatar: InitialsAvatar | IconAvatar;
+  media: FeedPostPhoto | null;
 };
-
-export type PhotoPlaceholder = {
-  kind: "photo-placeholder";
-  label: string;
-};
-
-export type AchievementPost = FeedPostBase & {
-  category: "achievement";
-  avatar: InitialsAvatar;
-  media: null;
-};
-
-export type ActivityPost = FeedPostBase & {
-  category: "activity";
-  avatar: InitialsAvatar;
-  media: PhotoPlaceholder;
-};
-
-export type AnnouncementPost = FeedPostBase & {
-  category: "announcement";
-  avatar: IconAvatar;
-  media: null;
-};
-
-export type FeedPost = AchievementPost | ActivityPost | AnnouncementPost;
 
 export type FeedData = {
   nurseryLabel: string;
   roomName: string;
   greeting: string;
-  childCount: number;
-  dateLabel: string;
   sectionLabel: string;
   composerPrompt: string;
   currentUser: {
@@ -51,5 +36,4 @@ export type FeedData = {
     roomName: string;
     initials: string;
   };
-  posts: readonly FeedPost[];
 };

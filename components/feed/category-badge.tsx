@@ -1,22 +1,42 @@
-import type { FeedPost } from "@/types/feed";
+import type { FeedPostCategory } from "@/types/feed";
 
 type CategoryBadgeProps = {
-  category: FeedPost["category"];
+  category: FeedPostCategory;
 };
 
 const categoryStyles: Record<
-  FeedPost["category"],
+  FeedPostCategory,
   { label: string; container: string; dot: string }
 > = {
-  achievement: {
-    label: "LOGRO",
-    container: "bg-achievement-soft text-achievement-strong",
-    dot: "bg-achievement-strong",
+  meal: {
+    label: "COMIDA",
+    container: "bg-meal-soft text-meal-strong",
+    dot: "bg-meal-strong",
+  },
+  nap: {
+    label: "SIESTA",
+    container: "bg-nap-soft text-nap-strong",
+    dot: "bg-nap-strong",
   },
   activity: {
     label: "ACTIVIDAD",
     container: "bg-activity-soft text-activity-strong",
     dot: "bg-activity-strong",
+  },
+  achievement: {
+    label: "LOGRO",
+    container: "bg-achievement-soft text-achievement-strong",
+    dot: "bg-achievement-strong",
+  },
+  mood: {
+    label: "ÁNIMO",
+    container: "bg-mood-soft text-mood-strong",
+    dot: "bg-mood-strong",
+  },
+  photo: {
+    label: "FOTO",
+    container: "bg-photo-soft text-photo-strong",
+    dot: "bg-photo-strong",
   },
   announcement: {
     label: "ANUNCIO",
