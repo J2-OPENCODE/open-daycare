@@ -11,6 +11,8 @@ type AppShellProps = {
   roomName: string;
   currentUser: FeedData["currentUser"];
   currentDestination: AppDestination;
+  canPublish?: boolean;
+  canManageKids?: boolean;
   onCreatePost?: () => void;
 };
 
@@ -19,6 +21,8 @@ export function AppShell({
   roomName,
   currentUser,
   currentDestination,
+  canPublish = true,
+  canManageKids = true,
   onCreatePost,
 }: AppShellProps) {
   return (
@@ -27,6 +31,8 @@ export function AppShell({
         roomName={roomName}
         currentUser={currentUser}
         currentDestination={currentDestination}
+        canPublish={canPublish}
+        canManageKids={canManageKids}
         onCreatePost={onCreatePost}
       />
 
@@ -34,6 +40,8 @@ export function AppShell({
         <MobileNavigation
           roomName={roomName}
           currentDestination={currentDestination}
+          canPublish={canPublish}
+          canManageKids={canManageKids}
           onCreatePost={onCreatePost}
         />
 

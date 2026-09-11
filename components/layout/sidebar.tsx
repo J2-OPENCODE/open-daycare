@@ -22,6 +22,8 @@ type SidebarProps = {
   roomName: string;
   currentUser: FeedData["currentUser"];
   currentDestination: AppDestination;
+  canPublish?: boolean;
+  canManageKids?: boolean;
   onCreatePost?: () => void;
 };
 
@@ -65,29 +67,37 @@ export function Sidebar({
   roomName,
   currentUser,
   currentDestination,
+  canPublish = true,
+  canManageKids = true,
   onCreatePost,
 }: SidebarProps) {
+  const destinations = navigationItems.filter(
+    (item) => canManageKids || item.destination !== "kids",
+  );
+
   return (
     <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col border-r border-border bg-surface px-4 py-6 md:flex">
       <Brand roomName={roomName} />
 
-      <button
-        type="button"
-        className="mb-[18px] flex w-full items-center justify-center gap-2 rounded-[14px] bg-linear-to-b from-coral-start to-coral-end p-3 text-[14.5px] font-extrabold text-white shadow-[0_8px_18px_-8px_rgba(238,129,100,0.75)] disabled:opacity-100"
-        disabled={!onCreatePost}
-        aria-label={
-          onCreatePost
-            ? "Nueva publicación"
-            : "Nueva publicación (no disponible)"
-        }
-        onClick={onCreatePost}
-      >
-        <PlusIcon size={17} />
-        Nueva publicación
-      </button>
+      {canPublish ? (
+        <button
+          type="button"
+          className="mb-[18px] flex w-full items-center justify-center gap-2 rounded-[14px] bg-linear-to-b from-coral-start to-coral-end p-3 text-[14.5px] font-extrabold text-white shadow-[0_8px_18px_-8px_rgba(238,129,100,0.75)] disabled:opacity-100"
+          disabled={!onCreatePost}
+          aria-label={
+            onCreatePost
+              ? "Nueva publicación"
+              : "Nueva publicación (no disponible)"
+          }
+          onClick={onCreatePost}
+        >
+          <PlusIcon size={17} />
+          Nueva publicación
+        </button>
+      ) : null}
 
       <nav className="flex flex-1 flex-col gap-1" aria-label="Navegación principal">
-        {navigationItems.map(
+        {destinations.map(
           ({ destination, label, icon: NavigationIcon, href }) => {
             const current = destination === currentDestination;
             const className = `flex items-center gap-3 rounded-xl px-3 py-[11px] text-[14.5px] ${

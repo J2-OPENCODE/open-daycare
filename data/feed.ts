@@ -1,4 +1,7 @@
+import type { Database } from "@/types/database";
 import type { FeedData } from "@/types/feed";
+
+type UserRole = Database["public"]["Enums"]["user_role"];
 
 /** Only the visual labels that do not come from the database live here. */
 export const feedData = {
@@ -14,3 +17,10 @@ export const feedData = {
     initials: "C",
   },
 } satisfies FeedData;
+
+/** The persisted role is English, so the sidebar translates it here. */
+export const userRoleLabels: Record<UserRole, string> = {
+  staff: "Maestra",
+  admin: "Administración",
+  parent: "Familia",
+};

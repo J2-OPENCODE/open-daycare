@@ -40,6 +40,7 @@ const announcementAvatar: IconAvatar = {
 export type FeedAudienceKid = {
   id: string;
   name: string;
+  roomName: string | null;
   avatar: InitialsAvatar;
   photoConsent: boolean;
 };
@@ -274,11 +275,6 @@ export async function getFeedPosts(): Promise<readonly FeedPost[]> {
   await connection();
 
   const access = await requireActiveUser();
-
-  if (access.role !== "staff" && access.role !== "admin") {
-    throw new Error("Only staff and admins can load the daycare feed.");
-  }
-
   const supabase = await createClient();
   const { data: posts, error } = await createFeedPostsQuery(
     supabase,
@@ -296,7 +292,10 @@ export async function getFeedPosts(): Promise<readonly FeedPost[]> {
   );
 }
 
-/** The composer needs the persisted children and rooms of the daycare. */
+/**
+ * Row level security narrows this to the children and rooms the viewer may
+ * read, so a parent receives their own children and their rooms only.
+ */
 export async function getFeedAudience(
   daycareId: string,
 ): Promise<FeedAudience> {
@@ -304,7 +303,7 @@ export async function getFeedAudience(
   const [childrenResult, roomsResult] = await Promise.all([
     supabase
       .from("children")
-      .select("id, full_name, photo_consent")
+      .select("id, full_name, room_id, photo_consent")
       .eq("daycare_id", daycareId)
       .eq("status", "active")
       .order("full_name", { ascending: true }),
@@ -327,10 +326,17 @@ export async function getFeedAudience(
     });
   }
 
+  // The room tells two children with the same name apart in the composer.
+  const roomNameById = new Map(
+    roomsResult.data.map((room) => [room.id, room.name]),
+  );
   const kids = childrenResult.data
     .map((child) => ({
       id: child.id,
       name: child.full_name,
+      roomName: child.room_id
+        ? (roomNameById.get(child.room_id) ?? null)
+        : null,
       avatar: createChildAvatar(child.id, child.full_name),
       photoConsent: child.photo_consent,
     }))
