@@ -15,6 +15,8 @@ import Link from "next/link";
 type MobileNavigationProps = {
   roomName: string;
   currentDestination: AppDestination;
+  canPublish?: boolean;
+  canManageKids?: boolean;
   onCreatePost?: () => void;
 };
 
@@ -28,35 +30,45 @@ const navigationItems = [
 export function MobileNavigation({
   roomName,
   currentDestination,
+  canPublish = true,
+  canManageKids = true,
   onCreatePost,
 }: MobileNavigationProps) {
+  const destinations = navigationItems.filter(
+    (item) => canManageKids || item.destination !== "kids",
+  );
+
   return (
     <>
       <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-surface px-4 md:hidden">
         <Brand roomName={roomName} variant="mobile" />
         <div className="flex items-center gap-2">
           <LogoutButton variant="mobile" />
-          <button
-            type="button"
-            className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-xl bg-linear-to-b from-coral-start to-coral-end text-white shadow-[0_6px_14px_-7px_rgba(238,129,100,0.75)] disabled:opacity-100"
-            disabled={!onCreatePost}
-            aria-label={
-              onCreatePost
-                ? "Nueva publicación"
-                : "Nueva publicación (no disponible)"
-            }
-            onClick={onCreatePost}
-          >
-            <PlusIcon size={18} />
-          </button>
+          {canPublish ? (
+            <button
+              type="button"
+              className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-xl bg-linear-to-b from-coral-start to-coral-end text-white shadow-[0_6px_14px_-7px_rgba(238,129,100,0.75)] disabled:opacity-100"
+              disabled={!onCreatePost}
+              aria-label={
+                onCreatePost
+                  ? "Nueva publicación"
+                  : "Nueva publicación (no disponible)"
+              }
+              onClick={onCreatePost}
+            >
+              <PlusIcon size={18} />
+            </button>
+          ) : null}
         </div>
       </header>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] md:hidden"
+        className={`fixed inset-x-0 bottom-0 z-30 grid border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] md:hidden ${
+          destinations.length === 4 ? "grid-cols-4" : "grid-cols-3"
+        }`}
         aria-label="Navegación principal"
       >
-        {navigationItems.map(
+        {destinations.map(
           ({ destination, label, icon: NavigationIcon, href }) => {
             const current = destination === currentDestination;
             const className = `flex min-h-16 flex-col items-center justify-center gap-1 text-[11.5px] ${

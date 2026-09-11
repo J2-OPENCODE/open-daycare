@@ -25,6 +25,7 @@ type FeedExperienceProps = {
   childCount: number;
   dateLabel: string;
   submitAction: CreatePostAction;
+  canPublish: boolean;
 };
 
 const SUCCESS_NOTICE_DURATION_MS = 3000;
@@ -37,6 +38,7 @@ export function FeedExperience({
   childCount,
   dateLabel,
   submitAction,
+  canPublish,
 }: FeedExperienceProps) {
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [showCreatePostSuccess, setShowCreatePostSuccess] = useState(false);
@@ -80,7 +82,9 @@ export function FeedExperience({
         roomName={feed.roomName}
         currentUser={feed.currentUser}
         currentDestination="feed"
-        onCreatePost={handleOpenCreatePost}
+        canPublish={canPublish}
+        canManageKids={canPublish}
+        onCreatePost={canPublish ? handleOpenCreatePost : undefined}
       >
         <div className="mx-auto w-full max-w-[760px] px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:px-10 md:pt-[34px] md:pb-20">
           <FeedHeader
@@ -90,18 +94,20 @@ export function FeedExperience({
             childCount={childCount}
             dateLabel={dateLabel}
           />
-          <FeedComposer
-            initials={feed.currentUser.initials}
-            prompt={feed.composerPrompt}
-            onCreatePost={handleOpenCreatePost}
-          />
+          {canPublish ? (
+            <FeedComposer
+              initials={feed.currentUser.initials}
+              prompt={feed.composerPrompt}
+              onCreatePost={handleOpenCreatePost}
+            />
+          ) : null}
           <FeedSectionHeading>{feed.sectionLabel}</FeedSectionHeading>
           <FeedList posts={posts} />
         </div>
       </AppShell>
 
       <CreatePostModal
-        isOpen={isCreatePostOpen}
+        isOpen={canPublish && isCreatePostOpen}
         kids={kids}
         rooms={rooms}
         submitAction={submitAction}

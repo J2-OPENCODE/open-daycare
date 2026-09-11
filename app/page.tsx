@@ -1,22 +1,17 @@
 import { createPost } from "@/app/actions/posts";
 import { FeedExperience } from "@/components/feed/feed-experience";
-import { feedData } from "@/data/feed";
+import { feedData, userRoleLabels } from "@/data/feed";
 import { requireActiveUser } from "@/lib/auth";
 import {
   formatFeedDateLabel,
   getFeedAudience,
   getFeedPosts,
 } from "@/lib/posts";
-import { notFound } from "next/navigation";
 
 export default async function Home() {
   const user = await requireActiveUser();
-
-  // The parent feed belongs to a future spec, so only staff and admin see `/`.
-  if (user.role === "parent") {
-    notFound();
-  }
-
+  // Parents read the feed of their own children; only staff and admin publish.
+  const canPublish = user.role !== "parent";
   const [posts, audience] = await Promise.all([
     getFeedPosts(),
     getFeedAudience(user.daycareId),
@@ -26,6 +21,9 @@ export default async function Home() {
     currentUser: {
       ...feedData.currentUser,
       name: user.fullName,
+      role: userRoleLabels[user.role],
+      initials:
+        Array.from(user.fullName.trim())[0]?.toLocaleUpperCase("es") ?? "?",
     },
   };
 
@@ -38,6 +36,7 @@ export default async function Home() {
       childCount={audience.activeChildCount}
       dateLabel={formatFeedDateLabel(new Date())}
       submitAction={createPost}
+      canPublish={canPublish}
     />
   );
 }
