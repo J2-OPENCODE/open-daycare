@@ -609,6 +609,30 @@ export function buildActivationReturnTo(token: string) {
     : null;
 }
 
+/**
+ * Answers whether the invited address already has an Auth identity. The probe
+ * is a `service_role` database function because `public.users` stores no email
+ * by design; it returns a boolean and never any attribute of the account.
+ * A failure propagates so the caller can fail closed instead of showing the
+ * signup form to someone who already has an account.
+ */
+export async function hasAuthAccountForEmail(
+  admin: AdminClient,
+  email: string,
+) {
+  const { data, error } = await admin.rpc("auth_account_exists", {
+    p_email: normalizeEmail(email),
+  });
+
+  if (error || typeof data !== "boolean") {
+    throw new Error("Unable to resolve whether the email has an account.", {
+      cause: error,
+    });
+  }
+
+  return data;
+}
+
 export async function findAuthUserEmail(admin: AdminClient, userId: string) {
   const { data, error } = await admin.auth.admin.getUserById(userId);
 

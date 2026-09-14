@@ -1,0 +1,48 @@
+schema: spec-driven
+
+context: |
+  OpenDayCare es una aplicación web multi-tenant para guarderías.
+  El personal (staff) publica en un feed lo que ocurre en su sala: actividades,
+  comidas, siestas, ánimo y fotos. Los padres acceden por invitación y ven
+  únicamente las publicaciones y perfiles de sus propios hijos.
+
+  Dominio: guarderías (daycares), salas (rooms), niños (children), usuarios
+  staff y padres, invitaciones y vínculos padre-hijo, publicaciones y fotos.
+
+  Stack: Next.js 16 App Router, TypeScript estricto, Tailwind CSS v4,
+  Supabase (Auth + Postgres con RLS en todas las tablas) vía @supabase/ssr.
+
+  Convenciones: identificadores, enums y valores persistidos en inglés;
+  etiquetas de UI y especificaciones en español. Claves primarias UUID y
+  campos de auditoría timestamptz.
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Example:
+#   context: |
+#     Tech stack: TypeScript, React, Node.js
+#     We use conventional commits
+#     Domain: e-commerce platform
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing

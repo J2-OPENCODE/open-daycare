@@ -9,6 +9,7 @@ import {
   findAuthUserEmail,
   findSentPendingInvitationByTokenDigest,
   generateAuthUserId,
+  hasAuthAccountForEmail,
   hashInvitationSecret,
   isValidInvitationCode,
   normalizeInvitationCode,
@@ -137,6 +138,13 @@ async function createParentAccount(
 
   if (!invitation) {
     return { status: "rejected", message: GENERIC_ACTIVATION_ERROR };
+  }
+
+  // The account may have been created between the page load and this submit.
+  // Checking here, before any identifier or claim is reserved, keeps that race
+  // from leaving an orphan claim behind.
+  if (await hasAuthAccountForEmail(admin, invitation.invitedEmail)) {
+    return { status: "rejected", message: EXISTING_ACCOUNT_MESSAGE };
   }
 
   // The browser never chooses any of these values.

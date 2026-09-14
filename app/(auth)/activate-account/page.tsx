@@ -3,6 +3,7 @@ import {
   activateNewParent,
 } from "@/app/(auth)/activate-account/actions";
 import { AccountActivationForm } from "@/components/auth/account-activation-form";
+import { ActivationUnavailable } from "@/components/auth/activation-unavailable";
 import { InvalidActivation } from "@/components/auth/invalid-activation";
 import { WrongSessionNotice } from "@/components/auth/wrong-session-notice";
 import { getAuthAccessState } from "@/lib/auth";
@@ -10,6 +11,7 @@ import type { AuthAccessState } from "@/lib/auth";
 import {
   buildActivationReturnTo,
   findAuthUserEmail,
+  hasAuthAccountForEmail,
   resolveActivationContext,
   toActivationInvitation,
   type ActivationContext,
@@ -106,14 +108,43 @@ export default async function ActivateAccountPage({
     context.kidName,
     context.roomName,
   );
+  const returnTo = buildActivationReturnTo(token);
+
+  // The context is valid only for a well-formed token, so the canonical return
+  // always exists here; without it there is no destination worth routing to.
+  if (!returnTo) {
+    return <ActivationLayout><InvalidActivation /></ActivationLayout>;
+  }
+
+  const loginHref = `/login?returnTo=${encodeURIComponent(returnTo)}`;
 
   if (access.status === "anonymous") {
+    // Runs only behind a validated token, so an invalid or expired link can
+    // never be used to probe whether an address has an account.
+    let hasAccount: boolean;
+
+    try {
+      hasAccount = await hasAuthAccountForEmail(
+        createAdminClient(),
+        context.invitation.email,
+      );
+    } catch {
+      // Failing closed: showing the signup form under doubt is the defect.
+      return <ActivationLayout><ActivationUnavailable /></ActivationLayout>;
+    }
+
+    // `redirect` throws, so it must run outside the block that catches errors.
+    if (hasAccount) {
+      redirect(loginHref);
+    }
+
     return (
       <ActivationLayout>
         <AccountActivationForm
           invitation={invitation}
           variant="new"
           action={activateNewParent.bind(null, token)}
+          loginHref={loginHref}
         />
       </ActivationLayout>
     );
@@ -128,9 +159,7 @@ export default async function ActivateAccountPage({
   if (!isInvitedParent) {
     return (
       <ActivationLayout>
-        <WrongSessionNotice
-          returnTo={buildActivationReturnTo(token) ?? "/activate-account"}
-        />
+        <WrongSessionNotice returnTo={returnTo} />
       </ActivationLayout>
     );
   }
@@ -141,6 +170,7 @@ export default async function ActivateAccountPage({
         invitation={invitation}
         variant="existing"
         action={activateExistingParent.bind(null, token)}
+        loginHref={loginHref}
       />
     </ActivationLayout>
   );
