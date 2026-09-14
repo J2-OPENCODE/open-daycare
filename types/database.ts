@@ -472,6 +472,7 @@ export type Database = {
         }
         Returns: string
       }
+      auth_account_exists: { Args: { p_email: string }; Returns: boolean }
       create_post: {
         Args: {
           p_body: string

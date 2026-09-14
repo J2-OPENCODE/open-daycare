@@ -22,6 +22,8 @@ type AccountActivationFormProps = {
   /** `existing` runs under a verified parent session, so no password is asked. */
   variant: "new" | "existing";
   action: ActivationAction;
+  /** Sign-in destination carrying the canonical return to this activation. */
+  loginHref: string;
 };
 
 const INITIAL_STATE: ActivateNewParentState = {
@@ -40,6 +42,7 @@ export function AccountActivationForm({
   invitation,
   variant,
   action,
+  loginHref,
 }: AccountActivationFormProps) {
   const [state, formAction, isPending] = useActionState(action, INITIAL_STATE);
   const isExistingAccount = variant === "existing";
@@ -173,7 +176,7 @@ export function AccountActivationForm({
       {isExistingAccount ? null : (
         <p className="mt-[22px] text-center text-[14.5px] text-muted-strong">
           ¿Ya tenés cuenta?{" "}
-          <Link href="/login" className="font-extrabold text-coral-dark">
+          <Link href={loginHref} className="font-extrabold text-coral-dark">
             Iniciar sesión
           </Link>
         </p>
